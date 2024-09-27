@@ -1,0 +1,284 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>许式伟的架构课（四）：网络 - 编程接口 | Gridea</title>
+<link rel="shortcut icon" href="https://xxgf.github.io//favicon.ico?v=1727422712163">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://xxgf.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="许式伟的架构课（四）：网络 - 编程接口 | Gridea - Atom Feed" href="https://xxgf.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="典型的网络应用程序视图
+
+
+物理层：网络设备的原生能力，它定义了硬件层次来看的基础网络协议。
+数据链路层：它负责解决的是局部网络世界的数据传输能力。网络数据传输技术会层出不穷，今天主流有固网、WiFi、3G/4G，明天有 5G/6G，未来也..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://xxgf.github.io/">
+  <img class="avatar" src="https://xxgf.github.io//images/avatar.png?v=1727422712163" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+      
+        <a href="/note" class="menu">
+          笔记
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              许式伟的架构课（四）：网络 - 编程接口
+            </h2>
+            <div class="post-info">
+              <span>
+                2024-03-19
+              </span>
+              <span>
+                6 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p>典型的网络应用程序视图<br>
+<img src="https://xxgf.github.io//post-images/1710927033069.webp" alt="" loading="lazy"></p>
+<ul>
+<li>物理层：网络设备的原生能力，它定义了硬件层次来看的基础网络协议。</li>
+<li>数据链路层：它负责解决的是局部网络世界的数据传输能力。网络数据传输技术会层出不穷，今天主流有固网、WiFi、3G/4G，明天有 5G/6G，未来也必然还会出现更快速的网络新技术。</li>
+</ul>
+<blockquote>
+<p>这些网络技术虽然都有自己独特的链路层协议，但都可以很自然融入整个互联网世界。原因在于什么？在于 IP 网络。</p>
+</blockquote>
+<ul>
+<li>
+<p>IP 网络层：它负责的是互联网世界的一体化，彼此包容与协作。IP 协议是在操作系统（例如：LInux）的网络栈中实现的。</p>
+</li>
+<li>
+<p>TCP/UDP传输层：是互联网 “操作系统” 的重要组成部分，和 IP 网络一起构成互联网 “操作系统” 的内核。IP 网络解决的是网如何通的问题，而传输层解决的是如何让互联网通讯可信赖的问题，从而大幅降低互联网应用程序开发的负担。</p>
+</li>
+</ul>
+<h1 id="应用层协议与网关">应用层协议与网关</h1>
+<p>NAT 网关本质上是一个透明代理（中间人），工作在网络协议的第四层，即传输层，基于 TCP/UDP 协议。</p>
+<p>如果我们限定传输的数据包一定是某种应用层协议时，就会出现所谓的应用层网关，工作在网络协议的第七层，所以有时候我们也叫七层网关。</p>
+<p>我们熟知的 Nginx、Apache 都可以用作应用层网关。应用层协议通常我们采用的是 HTTP/HTTPS 协议。</p>
+<p><strong>HTTP 协议好在哪里？</strong></p>
+<ul>
+<li>极其开放的协议头设计。用户还是可以加自己的字段，惯例上以 X- 开头。</li>
+<li>规范了业务的表达范式。以 PUT-POST-GET-DELETE 表达 CURD 操作。</li>
+<li>规范了应用层的路由方式。对应用层而言，“域名 + 资源路径” 是更好的路由依据，方便进行业务的切分。</li>
+</ul>
+<h1 id="tcpip-层编程接口">TCP/IP 层编程接口</h1>
+<p>从基于 IP 协议的网络视角来看，数据并不是源源不断的流（stream），而是一个个大小有明确限制的 IP 数据包。IP 协议是无连接的，它可以在不连接对方的情况下向其发送数据。</p>
+<p>IP 协议本身只定义了数据的目标 IP，那么这个 IP 地址对应的计算机收到数据后，究竟应该交给哪个软件应用程序来处理收到的数据呢？</p>
+<blockquote>
+<p>为了解决这个问题，在 IP 协议的基础上定义了两套传输层的协议：UDP 和 TCP 协议。它们都引入了端口（port）的概念。<br>
+端口很好地解决了软件间的冲突问题。一个 IP 地址 + 端口，我们通常记为 ip:port，代表了软件层面上来说唯一定位的通讯地址。每个软件只处理自己所使用的 ip:port 的数据。</p>
+</blockquote>
+<h2 id="为什么需要有多套传输层的协议tcp-和-udp呢">为什么需要有多套传输层的协议（TCP 和 UDP）呢？</h2>
+<p>底层的 IP 协议不保证数据是否到达目标，也不保证数据到达的次序。出于编程便捷性的考虑，TCP 协议就产生了。</p>
+<p>TCP 协议包含了 IP 数据包的序号、重传次数等信息，它可以解决丢包重传，纠正乱序，确保了数据传输的可靠性。</p>
+<p>但是 TCP 协议对传输协议的可靠性保证，对某些应用场景来说并不是一个好特性。最典型的就是音视频的传输。在网络比较差的情况下，我们往往希望丢掉一些帧，但是由于 TCP 重传机制的存在，可能会反而加剧了网络拥塞的情况</p>
+<p>这种情况下，UDP 协议就比较理想，它在 IP 协议基础上的额外开销非常小，基本上可以认为除了引入端口（port）外并没有额外做什么，非常适合音视频的传输需求。</p>
+<p>示例：</p>
+<pre><code>// 客户端
+c, err := net.Dial(&quot;tcp&quot;, addrServer)
+c.Write(...)
+c.Read(...)
+c.Close()
+
+// TCP服务端
+l, err := net.Listen(&quot;tcp&quot;, addrServer)
+for {
+  c, err := l.Accept()
+  if err != nil {
+    错误处理
+    continue
+  }
+  go handleConnection(c)
+}
+
+// UDP服务端
+c, err := net.ListenUDP(&quot;udp&quot;, addrServer)
+for {
+  n, srcAddr, err := c.ReadFromUDP(...)
+  if err != nil {
+    错误处理
+    continue
+  }
+  // 根据 srcAddr.IP+port 确定是谁发过来的包，怎么处理
+}
+
+</code></pre>
+<p>IP 和 UDP 的区别非常小，都是无连接的协议，唯一差别就是 UDPAddr 在 IPAddr 基础上增加了一个端口。也正因为如此，我们很少有应用程序会直接基于 IP 协议来编程。</p>
+<h1 id="http-层编程接口">HTTP 层编程接口</h1>
+<p>尽管基于 TCP/IP 层编程是一个选择，但是在当前如果没有特殊的理由，架构师做业务架构的时候，往往还是优先选择基于 HTTP 协议。</p>
+<p>对于 HTTP 客户端，使用上要比 TCP/UDP 简单得多，常见情况下直接调用 Get、Post 这些函数调用就满足业务需求。</p>
+<p>简单对比可以看出，基于 HTTP 协议的编程接口，和基于 TCP/IP 协议裸写业务，其复杂程度完全不可同日而语。前者一个程序的架子已经呈现，基本上只需要填写业务逻辑就好。这也是采纳通用的应用层协议的威力所在。</p>
+<p><strong>但有些场景需要我们基于 TCP/IP 层编程，例如开发IM服务，以及其他的需要长连接的场景。</strong></p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#%E5%BA%94%E7%94%A8%E5%B1%82%E5%8D%8F%E8%AE%AE%E4%B8%8E%E7%BD%91%E5%85%B3">应用层协议与网关</a></li>
+<li><a href="#tcpip-%E5%B1%82%E7%BC%96%E7%A8%8B%E6%8E%A5%E5%8F%A3">TCP/IP 层编程接口</a>
+<ul>
+<li><a href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E6%9C%89%E5%A4%9A%E5%A5%97%E4%BC%A0%E8%BE%93%E5%B1%82%E7%9A%84%E5%8D%8F%E8%AE%AEtcp-%E5%92%8C-udp%E5%91%A2">为什么需要有多套传输层的协议（TCP 和 UDP）呢？</a></li>
+</ul>
+</li>
+<li><a href="#http-%E5%B1%82%E7%BC%96%E7%A8%8B%E6%8E%A5%E5%8F%A3">HTTP 层编程接口</a></li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://xxgf.github.io/post/yun-ji-suan-san-pssa-pian/">
+              <h3 class="post-title">
+                云计算（三）：PaaS篇
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: '346dd1e6861a8d5154be',
+    clientSecret: '11fa9ccf79622cb14f892b083428ae40f9f28f13',
+    repo: 'XXGF.github.io',
+    owner: 'XXGF',
+    admin: ['XXGF'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://xxgf.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

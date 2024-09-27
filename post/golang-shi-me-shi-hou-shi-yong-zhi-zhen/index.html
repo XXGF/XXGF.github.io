@@ -1,0 +1,248 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>【Golang】什么时候使用指针？ | Gridea</title>
+<link rel="shortcut icon" href="https://xxgf.github.io//favicon.ico?v=1727422712163">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://xxgf.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="【Golang】什么时候使用指针？ | Gridea - Atom Feed" href="https://xxgf.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="场景一
+接受器是使用指针还是值? 在日常使用中没有感受到区别。两者有优劣吗？
+func (f *filterImpl) beforeHandel(ctx context.Context) (result bool, err error) {..." />
+    <meta name="keywords" content="Golang" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://xxgf.github.io/">
+  <img class="avatar" src="https://xxgf.github.io//images/avatar.png?v=1727422712163" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+      
+        <a href="/note" class="menu">
+          笔记
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              【Golang】什么时候使用指针？
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-08-03
+              </span>
+              <span>
+                6 min read
+              </span>
+              
+                <a href="https://xxgf.github.io/tag/qfhrI8RLK/" class="post-tag">
+                  # Golang
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h1 id="场景一">场景一</h1>
+<p>接受器是使用指针还是值? 在日常使用中没有感受到区别。两者有优劣吗？</p>
+<pre><code class="language-go">func (f *filterImpl) beforeHandel(ctx context.Context) (result bool, err error) {
+    //xxxxxx
+    return
+}
+func (f filterImpl) beforeHandel(ctx context.Context) (result bool, err error) {
+    //xxxxxx
+    return
+}
+</code></pre>
+<p>一般来说有以下几种情况：</p>
+<p>If the receiver is a map, func or chan, don’t use a pointer to them. If the receiver is a slice and the method doesn’t reslice or reallocate the slice, don’t use a pointer to it.</p>
+<p>如果接收者是map、函数或者通道，就不能使用指针类型。如果接收者是切片，并且对应的方法没有进行重新切片或是重新分配切片内存的操作，那么也不要使用指针类型。</p>
+<p>If the method needs to mutate the receiver, the receiver must be a pointer.</p>
+<p>如果方法需要修改接收者，那么接收者的类型必须是指针。</p>
+<p>If the receiver is a struct that contains a sync.Mutex or similar synchronizing field, the receiver must be a pointer to avoid copying.</p>
+<p>如果接收者是一个包含了 sync.Mutex 或类似的同步字段的结构体，那么接收者必须是指针来避免冗余的副本拷贝。</p>
+<p>If the receiver is a large struct or array, a pointer receiver is more efficient. How large is large? Assume it’s equivalent to passing all its elements as arguments to the method. If that feels too large, it’s also too large for the receiver.</p>
+<p>如果接收者是一个体量很大的结构体或数组，指针类型的接收者会更高效。不过到底多大才算大呢？假设这就像是把它所有的元素像参数一样传给方法。如果感觉这个参数会太大了，那么对接收者来说同样也太大了。</p>
+<p>Can function or methods, either concurrently or when called from this method, be mutating the receiver? A value type creates a copy of the receiver when the method is invoked, so outside updates will not be applied to this receiver. If changes must be visible in the original receiver, the receiver must be a pointer.</p>
+<p>函数或方法可以在并发或被方法调用时修改接收者吗？对于值类型来说会在方法被调用时创建一份接收者的副本，因此来自外部的更新并不会影响到这个接收者。如果发生的修改要在原接收者身上反映出来，那么接收者必须是一个指针。</p>
+<p>If the receiver is a struct, array or slice and any of its elements is a pointer to something that might be mutating, prefer a pointer receiver, as it will make the intention more clear to the reader.</p>
+<p>如果接收者是结构体、数组或是切片，并且它们之中的指针元素所指向的内容有可能被修改的话，那么选择指针类型的接收者会更好一些，因为这样可以让方法的使用意图更加明确和可读。</p>
+<p>If the receiver is a small array or struct that is naturally a value type (for instance, something like the time.Time type), with no mutable fields and no pointers, or is just a simple basic type such as int or string, a value receiver makes sense. A value receiver can reduce the amount of garbage that can be generated; if a value is passed to a value method, an on-stack copy can be used instead of allocating on the heap. (The compiler tries to be smart about avoiding this allocation, but it can’t always succeed.) Don’t choose a value receiver type for this reason without profiling first.</p>
+<p>如果接收者是一个很小的数组或是结构体，像是一些普通的值类型（比如 time.Time 类型），没有可变的字段和指针，或者就是一些很简单的基础类型像是 int 或 string，那么值类型的接收者会更加合理一些。因为值类型接收者可以减少垃圾生成的数量；在向值类型接收者方法中传入一个值时，编译器会采用栈上复制而不是在堆上进行分配。（编译器会尽量避免内存分配，但也不是总能做得到的）但也不要因为这个原因，就不进行事先的分析而盲目地使用值类型的接收者。</p>
+<p>详见go官方Wiki：https://github.com/golang/go/wiki/CodeReviewComments#receiver-type</p>
+<h1 id="场景二">场景二</h1>
+<p>对象的属性值是使用指针还是值<br>
+这里使用比较多的场景是定时缓存数据，然后接口请求数据的时候直接从内存中取即可</p>
+<pre><code class="language-go">type LoadJob struct {
+	validSoft     *entity.SoftSet
+	invalidSoft   *entity.SoftSet
+	supplySoft    *entity.SoftSet
+	suggestMeddle *entity.MeddleSet
+	searchMeddle  *entity.MeddleSet
+	searchSegment *entity.SegmentSet
+	searchCipher  *entity.CipherSet
+}
+</code></pre>
+<p>如果对象存在全局变量引用并且对象的方法存在修改对象属性值，或者是对象的属性值数据量很大，这种一般比较推荐使用指针了。<br>
+如果是简单传参的话，对象不多，一般来说就推荐不使用指针了，指针会造成逃逸或者是不同函数之间存在修改污染的情况存在，并且小对象拷贝几乎没有什么性能消耗。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#%E5%9C%BA%E6%99%AF%E4%B8%80">场景一</a></li>
+<li><a href="#%E5%9C%BA%E6%99%AF%E4%BA%8C">场景二</a></li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://xxgf.github.io/post/gopass-wang-guan-yan-jiu-fang-xiang/">
+              <h3 class="post-title">
+                Gopass 网关研究方向
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: '346dd1e6861a8d5154be',
+    clientSecret: '11fa9ccf79622cb14f892b083428ae40f9f28f13',
+    repo: 'XXGF.github.io',
+    owner: 'XXGF',
+    admin: ['XXGF'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://xxgf.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

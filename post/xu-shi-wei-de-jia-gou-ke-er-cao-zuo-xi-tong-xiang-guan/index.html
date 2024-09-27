@@ -1,0 +1,458 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>许式伟的架构课（二）：操作系统 | Gridea</title>
+<link rel="shortcut icon" href="https://xxgf.github.io//favicon.ico?v=1727422712163">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://xxgf.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="许式伟的架构课（二）：操作系统 | Gridea - Atom Feed" href="https://xxgf.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="
+操作系统的核心价值在于：
+实现软件治理，让多个软件和谐共处；
+提供基础的编程接口，降低软件开发难度。
+
+一、操作系统进场
+多个软件如何共处，也就是软件治理的需求。
+
+多个软件如何同时运行（多任务的需求）？
+多个软件如何共同使用计算机上的存..." />
+    <meta name="keywords" content="架构设计" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://xxgf.github.io/">
+  <img class="avatar" src="https://xxgf.github.io//images/avatar.png?v=1727422712163" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+      
+        <a href="/note" class="menu">
+          笔记
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              许式伟的架构课（二）：操作系统
+            </h2>
+            <div class="post-info">
+              <span>
+                2024-02-27
+              </span>
+              <span>
+                17 min read
+              </span>
+              
+                <a href="https://xxgf.github.io/tag/rbUcSskit/" class="post-tag">
+                  # 架构设计
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <blockquote>
+<p>操作系统的核心价值在于：<br>
+实现软件治理，让多个软件和谐共处；<br>
+提供基础的编程接口，降低软件开发难度。</p>
+</blockquote>
+<h1 id="一-操作系统进场">一、操作系统进场</h1>
+<p>多个软件如何共处，也就是软件治理的需求。</p>
+<blockquote>
+<p>多个软件如何同时运行（多任务的需求）？<br>
+多个软件如何共同使用计算机上的存储空间（内存管理、文件系统的需求）？<br>
+多个软件如何共同使用同一个外部设备（设备管理的需求）？<br>
+多个软件如何相互通讯，如何进行数据交换（进程间通讯、共享内存的需求）？<br>
+病毒、恶意软件如何治理（安全管理的需求）？</p>
+</blockquote>
+<p>于是，操作系统就出现了。对于软件而言，它像一个大法官，制定规则并据此约束大家的行为。</p>
+<h2 id="操作系统的启动过程">操作系统的启动过程</h2>
+<p>操作系统是怎么获得执行权的？这是计算机主板 ROM 上的启动程序（BIOS）交给它的。</p>
+<p>计算机加电启动后，中央处理器（CPU）会从一个固定的存储地址加载指令序列执行。通常，这个固定的存储地址指向计算机主板的 ROM 上的一段启动程序（BIOS）。这段启动程序通常包含以下这些内容。</p>
+<ul>
+<li>存储设备的驱动程序，用以识别常规的外置存储设备，比如硬盘、光驱、U 盘。</li>
+<li>基础外部设备的驱动程序，比如键盘、鼠标、显示器。</li>
+<li>设备和启动配置的基础管理能力。</li>
+<li>支持执行外置存储中引导区的机器代码程序。</li>
+<li>跳转到外置存储引导区的固定地址，把执行权交给该地址上的引导程序。</li>
+</ul>
+<h2 id="操作系统的需求演进">操作系统的需求演进</h2>
+<p>操作系统首先要解决的是软件治理的问题，大体可分为以下六个子系统：进程管理、存储管理、输入设备管理、输出设备管理、网络管理、安全管理等。</p>
+<p>操作系统其次解决的是基础编程接口问题。这些编程接口一方面简化了软件开发，另一方面提供了多软件共同运行的环境，实现了软件治理。</p>
+<p>操作系统也是核心的流量入口。占领了操作系统，就占有了用户，想推什么内容给用户都很容易。</p>
+<h2 id="操作系统的边界在哪里">操作系统的边界在哪里？</h2>
+<p>要回答这个问题，我们需要看清楚这样三个角色的关系：</p>
+<ul>
+<li>硬件（个人计算机、手机或其他）</li>
+<li>操作系统</li>
+<li>浏览器</li>
+</ul>
+<h3 id="现代操作系统">现代操作系统</h3>
+<p>无论是本地操作系统 iOS 和 Android，还是 Web 操作系统（浏览器）如微信小程序，都实现了“帐号 - 支付 - 应用市场”这样的商业闭环。这类操作系统，我们不妨把它叫做现代操作系统。</p>
+<h1 id="二-软件运行机制及内存管理">二、软件运行机制及内存管理</h1>
+<p>操作系统的核心职能是软件治理，而软件治理的一个很重要的部分，就是让多个软件可以共同合理使用计算机的资源，不至于出现争抢的局面。</p>
+<p><strong>内存作为计算机最基础的硬件资源，有着非常特殊的位置。</strong><br>
+我们知道，CPU 可以直接访问的存储资源非常少，只有：</p>
+<ul>
+<li>寄存器、</li>
+<li>内存（RAM）、</li>
+<li>主板上的 ROM。</li>
+</ul>
+<p>寄存器的访问速度非常非常快，但是数量很少，大部分程序员不直接打交道，而是<strong>由编程语言的编译器根据需要自动选择寄存器来优化程序的运行性能</strong>。</p>
+<p>主板上的 ROM 是非易失的只读的存储。ROM 非易失和只读的特点，决定了它非常适合存储计算机的启动程序（BIOS）。</p>
+<p>但内存，是唯一的CPU内置支持，且和程序员直接打交道的基础资源。</p>
+<p>存储的作用有两个：</p>
+<ul>
+<li>一个是作为 “计算” 的操作对象，输入和输出数据存放的所在；</li>
+<li>另一个是存放 “计算” 本身，也就是程序员写的程序。</li>
+</ul>
+<h2 id="计算机运行全过程">计算机运行全过程</h2>
+<p>对于 CPU 来说，“计算” 过程从计算机加电启动，执行 BIOS 程序的第一条指令开始，到最后计算机关机，整个就是一个完整的 “计算” 过程。</p>
+<p>但是从操作系统的视角来看，计算机从开机到关机，整个 “计算” 过程，由很多软件，也就是子 “计算” 过程，共同完成。</p>
+<h2 id="内存管理">内存管理</h2>
+<p><strong>计算机是如何运行外置存储上的软件的？这和内存管理有关。</strong></p>
+<p>结合内存的作用，我们谈内存管理，只需要谈清楚两个问题：</p>
+<ul>
+<li>如何分配内存（给运行中的软件，避免它们发生资源争抢）；</li>
+<li>如何运行外置存储（比如硬盘）上的软件？</li>
+</ul>
+<h3 id="实模式下的内存管理">实模式下的内存管理</h3>
+<p>那么，在实模式下，操作系统如何运行外置存储（比如硬盘）上的软件？</p>
+<p>很简单，就是把软件完整从外置存储读入到内存然后执行它。不过，在执行前它干了一件事情，把浮动地址固定下来。</p>
+<blockquote>
+<p>为什么会有浮动地址？因为软件还没有加载到内存的时候并不知道自己会在哪里，所以有很多涉及数据的地址、函数的地址都没法固定下来，要在操作系统把它加载到内存时来确定。</p>
+</blockquote>
+<p>整体来说，实模式内存管理的机制是非常容易理解的。因为它毕竟实质上是一个程序被拆分为很多个软件（程序代码片段），实现了程序代码片段的动态加载而已。</p>
+<h3 id="保护模式下的内存管理">保护模式下的内存管理</h3>
+<p>实模式有两个问题：</p>
+<ul>
+<li>其一是安全性：操作系统以及所有软件都运行在一起，相互之间可以随意修改对方的数据甚至程序指令，这样搞破坏就非常容易。</li>
+<li>其二是支持的软件复杂性低，同时可运行的软件数量少。<br>
+一方面，软件越复杂，它的程序代码量就越多，需要的存储空间越大，甚至可能出现单个软件的大小超过计算机的可用内存，这时在实模式下就没法执行它。<br>
+另一方面，哪怕单个软件可运行，但是一旦我们同时运行的软件多几个，操作系统对内存的需求量就会急剧增加。相比这么多软件加起来的内存需求量，内存的存储空间往往仍然是不足的。</li>
+</ul>
+<p><strong>但是为什么平常我们可以毫无顾忌地不断打开新的软件，从来不曾担心过内存会不足呢？</strong></p>
+<p>这就是保护模式的作用了。保护模式下，内存访问不再是直接通过物理内存，而是基于虚拟内存。虚拟内存模式下，整个内存空间被分成很多个连续的内存页。每个内存页大小是固定的，比如 64K。</p>
+<p>这样，每次 CPU 访问某个虚拟内存地址中的数据，它都会先计算出这是要访问哪个内存页，然后 CPU 再通过一个地址映射表，把虚拟的内存地址转为物理的内存地址，然后到这个物理内存地址去读取数据。地址映射表是一个数组，下标是内存页页号，值是该内存页对应的物理内存首地址。</p>
+<p>当然，也有可能某一个内存页对应的物理内存地址还不存在，这种情况叫缺页，没法读取数据，这时 CPU 就会发起一个缺页的中断请求<br>
+<img src="https://xxgf.github.io//post-images/1709026067692.webp" alt="" loading="lazy"></p>
+<blockquote>
+<p>这个缺页的中断请求会被操作系统接管。发生缺页时，操作系统会为这个内存页分配物理的内存，并恢复这个内存页的数据。如果没有空闲的物理内存可以分配，它就会选择一个最久没有被访问的内存页进行淘汰。</p>
+</blockquote>
+<p>通过这个虚拟内存的机制，操作系统并不需要一上来就把整个软件装进内存中，而是通过缺页中断按需加载对应的程序代码片段。多个软件同时运行的问题也解决了，内存不够用的时候，就把最久没有用过的内存页淘汰掉，腾出物理内存出来。</p>
+<p><strong>运行软件的问题解决了。那么，操作系统如何分配内存给运行中的软件？</strong></p>
+<p>其实，内存分配的问题也解决了，并不需要任何额外的机制。反正内存地址空间是虚拟的，操作系统可以一上来就给要运行的软件分配超级大的内存，你想怎么用随你。软件如果不用某个内存页，什么都不发生。软件一旦用了某个内存页，通过缺页中断，操作系统就分配真正的物理内存给它。</p>
+<p>通过引入虚拟内存及其缺页机制，CPU 很好地解决了操作系统和软件的配合关系。</p>
+<p>每个运行中的软件，我们把它叫进程，都有自己的地址映射表。也就是说，虚拟地址并不是全局的，而是每个进程有一个自己独立的虚拟地址空间。</p>
+<p>在保护模式下，计算机的基础架构体系和操作系统共同在努力做的一件事情，就是让每个软件“感觉”自己在独占整个计算机的资源。独立的虚拟地址空间很好地伪装了这一点：看起来我独自在享用所有内存资源。在实模式下的浮动地址的问题也解决了。</p>
+<h1 id="三-操作系统内核与编程接口">三、操作系统内核与编程接口</h1>
+<p>如果是实模式下的操作系统，大家都在同一个地址空间下，那么只需要知道操作系统的接口函数地址，理论上就可以直接访问。</p>
+<p>但是今天主流的操作系统都是保护模式的，操作系统和软件不在同一个进程，软件怎么才能使用操作系统的能力呢？</p>
+<p>中断。大部分情况下，操作系统的能力通过软中断向我们写的软件开放，为此还专门引入了一个术语叫 “系统调用（syscall）”。</p>
+<h2 id="系统调用如何工作">系统调用如何工作？</h2>
+<p>操作系统内核的执行权限等级，和我们常规的软件进程不同。像 Intel CPU 通常把代码执行权限分为 Ring 0-3 四个等级。操作系统内核通常运行在 Ring 0，而常规的软件进程运行在 Ring 3。</p>
+<p>系统调用所基于的软中断，它很像一次间接的“函数调用”，但是又颇有不同。</p>
+<p>原因在于，我们的应用程序运行在 Ring 3（我们通常叫<strong>用户态</strong>），而操作系统内核运行在 Ring 0（我们通常叫<strong>内核态</strong>）。所以一次中断调用，不只是“函数调用”，更重要的是改变了执行权限，从用户态跃迁到了内核态。</p>
+<h2 id="编程接口">编程接口</h2>
+<p>操作系统（内核）有六大子系统：存储管理、输入设备管理、输出设备管理、进程管理、网络管理、安全管理。除了安全管理是一个“润物细无声”的能力外，其他子系统都会有所包装。<br>
+<img src="https://xxgf.github.io//post-images/1709035456006.webp" alt="" loading="lazy"><br>
+这些标准库的能力，大部分与操作系统能力相关，但或多或少进行了适度的包装。</p>
+<h2 id="动态库">动态库</h2>
+<p>从操作系统的角度来说，它仅仅提供最原始的系统调用是不够的，有很多业务逻辑的封装，在用户态来做更合适。但是，它也无法去穷举所有的编程语言，然后一一为它们开发各种语言的基础库。那怎么办？</p>
+<p>聪明的操作系统设计者们想了一个好办法：动态库。几乎所有主流操作系统都有自己的动态库设计：</p>
+<ul>
+<li>Windows 的 dll（Dynamic Link Library）；</li>
+<li>Linux/Android 的 so（shared object）；</li>
+<li>Mac/iOS 的 dylib（Mach-O Dynamic Library）。</li>
+</ul>
+<p>动态库的原理其实很简单，核心考虑两个东西。</p>
+<ul>
+<li>浮动地址。动态库本质上是在一个进程地址空间中动态加载程序片段，这个程序片段的地址显然在编译阶段是没法确定的，需要在加载动态库的过程把浮动地址固定下来。这块的技术非常成熟，我们在实模式下加载进程就已经在使用这样的技术了。</li>
+<li>导出函数表。动态库需要记录有哪些函数被导出（export），这样用户就可以通过函数的名字来取得对应的函数地址。</li>
+</ul>
+<p>有了动态库，编程语言的设计者实现其标准库来说就多了一个选择：直接调用动态库的函数并进行适度的语义包装。大部分语言会选择这条路，而不是直接用系统调用。</p>
+<h2 id="操作系统与编程语言">操作系统与编程语言</h2>
+<p>和这个话题相关的，有这么一些有趣的问题：</p>
+<ul>
+<li>先有编程语言，还是先有操作系统；</li>
+<li>编程语言怎么做到自举的（比如用 C 语言来实现 C 语言编译器）；</li>
+<li>操作系统开发的环境是什么样的，能够做到操作系统自身迭代本操作系统（自举）么？</li>
+</ul>
+<p>都能自举。<br>
+语言的自举就是用其他语言开发本语言的编译器，然后再用本语言重写一遍。<br>
+操作系统也一样，通常一门新的操作系统开发之初，会用交叉编译技术先干出来，然后等到新操作系统稳定到一定程度后再实现自举，也就是用本操作系统自己来做操作系统的后续迭代开发。</p>
+<blockquote>
+<p>所谓交叉编译就是在一种 “CPU + 操作系统” 架构下，生成另一种 “CPU + 操作系统” 架构下的软件。</p>
+</blockquote>
+<hr>
+<h1 id="四-外存管理与文件系统">四、外存管理与文件系统</h1>
+<p>计算机有非常多样化的外置存储设备，比如：磁带、光盘、硬盘、U 盘、SSD 等等。</p>
+<p>这些外置存储设备依据其功能特性不同，简单可以分为如下三类：</p>
+<ul>
+<li>顺序读写型。如：磁带。</li>
+<li>随机只读型。更准确说是单次完整写入多次读取型，也就是每次写数据都是整个存储介质一次性完整写入数据。如：光盘（含可擦写光盘）。</li>
+<li>随机读写型。如：软盘、硬盘、U 盘、SSD 等等。</li>
+</ul>
+<p>随机读写型的外置存储最为常见。</p>
+<h2 id="外存的数据格式">外存的数据格式</h2>
+<p>外置存储和内存最大的区别是什么？</p>
+<ul>
+<li>外置存储是持久存储，它的目的是用来存储资料的。</li>
+<li>内存是临时存储，虽然是存储，但是它实质上是为 CPU 的计算服务的。</li>
+</ul>
+<p>和内存管理不同，外部存储的管理，我们希望这些写到存储中的数据是“自描述”的某种数据格式，我们可以随时查看之前写了哪些内容，都什么时候写的。</p>
+<p><strong>这就是文件系统的来源。</strong></p>
+<p>文件系统把存储设备中的数据组织成为了一棵树。树的根节点为目录，我们叫根目录。如果是目录，那么它还可以有子节点，子节点同样可以是子目录或文件。文件则是叶节点，保存我们希望存储的资料。每个节点，无论是目录还是文件，都有自己的名字、创建时间、最后编辑时间、最后访问时间等信息。</p>
+<h3 id="随机只读型">随机只读型</h3>
+<p>随机只读型的外置存储，常见的文件系统实现有：</p>
+<ul>
+<li>ISO-9660</li>
+<li>UDF</li>
+<li>Joliet<br>
+这一类型的文件系统，它的数据格式会偏向于读优化。</li>
+</ul>
+<blockquote>
+<p>存储系统一般都有读写操作，所谓读优化是指在数据结构和算法设计时尽可能考虑让读操作更高效<br>
+整个文件系统的元数据和文件数据都会非常紧凑，比如文件数据不必支持分块等等。</p>
+</blockquote>
+<h3 id="随机读写型">随机读写型</h3>
+<p>随机读写型的外置存储，例如硬盘，常见的文件系统有：</p>
+<ul>
+<li>FAT32</li>
+<li>NTFS</li>
+<li>HFS/HFS+</li>
+<li>EXT3/EXT4<br>
+... 等等</li>
+</ul>
+<p>对于随机读写型的存储设备，操作系统往往还支持对其进行分区，尤其是在这个存储设备的容量非常大的情况下。分区本质上只是把一个存储设备模拟成多个存储设备来使用而已。</p>
+<ul>
+<li>
+<p>一般来说，拿到一块存储设备，我们往往第一步是对其进行分区（当然也可以省略这一步，把整个设备看做一个分区）。</p>
+</li>
+<li>
+<p>第二步是对每个分区进行格式化。所谓格式化就是给这个分区生成文件系统的初始状态。格式化最重要的是标记分区的文件系统格式（用来告诉别人这个分区是数据是怎么组织的），并且生成文件系统的根目录。</p>
+</li>
+<li>
+<p>第三步是把该分区挂载（mount）到操作系统管理的文件系统名字空间中。完成挂载后，该分区的文件系统管理程序就工作起来了，我们可以对这个文件系统进行目录和文件的读取、创建、删除、修改等操作。</p>
+</li>
+</ul>
+<h2 id="外存的使用接口">外存的使用接口</h2>
+<p>最简单的方式是用操作系统提供的命令行工具【本质应该也是接口调用？】。例如：</p>
+<ul>
+<li>目录相关：ls, mkdir, mv, cp, rmdir 等。</li>
+<li>文件相关：cat, vi, mv, cp, rm 等。</li>
+</ul>
+<p>当然，最原始的方式还是我们上一讲介绍的 “系统调用”。但大部分编程语言对此都有相应的封装，例如 Go 语言中的相关功能如下所示。</p>
+<ul>
+<li>目录相关：os.Mkdir, os.Rename, os.Remove 等。</li>
+<li>文件相关：os.Open/Create/OpenFile, os.Rename, os.Remove 等。、</li>
+</ul>
+<p>有了文件系统的使用接口，进程就可以互不影响地去使用这些外置存储设备。除非这些进程要操作的文件或目录的路径产生冲突，一般情况下它们并不需要感知到其他进程的存在。</p>
+<p>操作系统提供了一些冲突检查的机制。例如 “检查文件是否存在，不存在就创建它”，这个语义在保证原子性的前提下，就可以用于做进程间的互斥。<strong>例如，我们希望一个软件不要运行多个进程实例，就可以基于这个机制来实现。</strong></p>
+<h2 id="虚拟内存的支持">虚拟内存的支持</h2>
+<p>在物理内存不足的时候，操作系统会利用外存把一些很久没有使用的内存页的数据，保存到外存以进行淘汰。</p>
+<p>在 UNIX 系的操作系统中，操作系统为此分配了一个磁盘分区叫 swap 分区，专门用于内存页的保存和恢复。</p>
+<p>在缺页发生比较频繁时，内存页的数据经常性发生保存和恢复，这会发生大量的磁盘 IO 操作，非常占用 CPU 时间，这时候我们通常能够非常明显感觉到计算机变得很慢。</p>
+<h2 id="总结">总结</h2>
+<p>整体来说，外存管理从架构角度来说比较简单，复杂性主要集中在外存数据格式，也就是文件系统的设计上。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#%E4%B8%80-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%BF%9B%E5%9C%BA">一、操作系统进场</a>
+<ul>
+<li><a href="#%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B">操作系统的启动过程</a></li>
+<li><a href="#%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E9%9C%80%E6%B1%82%E6%BC%94%E8%BF%9B">操作系统的需求演进</a></li>
+<li><a href="#%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E8%BE%B9%E7%95%8C%E5%9C%A8%E5%93%AA%E9%87%8C">操作系统的边界在哪里？</a>
+<ul>
+<li><a href="#%E7%8E%B0%E4%BB%A3%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F">现代操作系统</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E4%BA%8C-%E8%BD%AF%E4%BB%B6%E8%BF%90%E8%A1%8C%E6%9C%BA%E5%88%B6%E5%8F%8A%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86">二、软件运行机制及内存管理</a>
+<ul>
+<li><a href="#%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%BF%90%E8%A1%8C%E5%85%A8%E8%BF%87%E7%A8%8B">计算机运行全过程</a></li>
+<li><a href="#%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86">内存管理</a>
+<ul>
+<li><a href="#%E5%AE%9E%E6%A8%A1%E5%BC%8F%E4%B8%8B%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86">实模式下的内存管理</a></li>
+<li><a href="#%E4%BF%9D%E6%8A%A4%E6%A8%A1%E5%BC%8F%E4%B8%8B%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86">保护模式下的内存管理</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E4%B8%89-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%86%85%E6%A0%B8%E4%B8%8E%E7%BC%96%E7%A8%8B%E6%8E%A5%E5%8F%A3">三、操作系统内核与编程接口</a>
+<ul>
+<li><a href="#%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C">系统调用如何工作？</a></li>
+<li><a href="#%E7%BC%96%E7%A8%8B%E6%8E%A5%E5%8F%A3">编程接口</a></li>
+<li><a href="#%E5%8A%A8%E6%80%81%E5%BA%93">动态库</a></li>
+<li><a href="#%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%B8%8E%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80">操作系统与编程语言</a></li>
+</ul>
+</li>
+<li><a href="#%E5%9B%9B-%E5%A4%96%E5%AD%98%E7%AE%A1%E7%90%86%E4%B8%8E%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F">四、外存管理与文件系统</a>
+<ul>
+<li><a href="#%E5%A4%96%E5%AD%98%E7%9A%84%E6%95%B0%E6%8D%AE%E6%A0%BC%E5%BC%8F">外存的数据格式</a>
+<ul>
+<li><a href="#%E9%9A%8F%E6%9C%BA%E5%8F%AA%E8%AF%BB%E5%9E%8B">随机只读型</a></li>
+<li><a href="#%E9%9A%8F%E6%9C%BA%E8%AF%BB%E5%86%99%E5%9E%8B">随机读写型</a></li>
+</ul>
+</li>
+<li><a href="#%E5%A4%96%E5%AD%98%E7%9A%84%E4%BD%BF%E7%94%A8%E6%8E%A5%E5%8F%A3">外存的使用接口</a></li>
+<li><a href="#%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%9A%84%E6%94%AF%E6%8C%81">虚拟内存的支持</a></li>
+<li><a href="#%E6%80%BB%E7%BB%93">总结</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://xxgf.github.io/post/xu-shi-wei-de-jia-gou-ke-yi-hui-bian-bian-cheng-yu-yan-de-dan-sheng/">
+              <h3 class="post-title">
+                许式伟的架构课（一）：编程语言
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: '346dd1e6861a8d5154be',
+    clientSecret: '11fa9ccf79622cb14f892b083428ae40f9f28f13',
+    repo: 'XXGF.github.io',
+    owner: 'XXGF',
+    admin: ['XXGF'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://xxgf.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

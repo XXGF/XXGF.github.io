@@ -1,0 +1,281 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title> 许式伟的架构课（五）：安全管理 | Gridea</title>
+<link rel="shortcut icon" href="https://xxgf.github.io//favicon.ico?v=1727422712163">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://xxgf.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title=" 许式伟的架构课（五）：安全管理 | Gridea - Atom Feed" href="https://xxgf.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="网络环境的信息安全问题
+上网过程需要经过一系列的中间节点，有交换机，有路由器。所以，存在一下风险：
+
+被窃听的风险。可能会有人在这些节点上监听你访问和提交的内容。
+被篡改的风险。可能会有人在这些节点上截获并修改你访问的内容。
+被钓鱼的风险。..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://xxgf.github.io/">
+  <img class="avatar" src="https://xxgf.github.io//images/avatar.png?v=1727422712163" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+      
+        <a href="/note" class="menu">
+          笔记
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+               许式伟的架构课（五）：安全管理
+            </h2>
+            <div class="post-info">
+              <span>
+                2024-03-20
+              </span>
+              <span>
+                4 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h1 id="网络环境的信息安全问题">网络环境的信息安全问题</h1>
+<p>上网过程需要经过一系列的中间节点，有交换机，有路由器。所以，存在一下风险：</p>
+<ul>
+<li>被窃听的风险。可能会有人在这些节点上监听你访问和提交的内容。</li>
+<li>被篡改的风险。可能会有人在这些节点上截获并修改你访问的内容。</li>
+<li>被钓鱼的风险。可能会有人冒充你要访问的服务提供方和你通讯。</li>
+</ul>
+<h2 id="首先是怎么防篡改">首先是怎么防篡改。</h2>
+<p>解决方法是数字签名技术。</p>
+<h3 id="签名过程">签名过程</h3>
+<p>示例：</p>
+<pre><code>import &quot;crypto/hmac&quot;
+import &quot;crypto/sha1&quot;
+import &quot;encoding/base64&quot;
+
+textToProtected := &quot;要防篡改的内容&quot;
+keyHint := &quot;123&quot;
+key := findKey(keyHint) // 根据 keyHint 查找到 key []byte
+
+h := hmac.New(sha1.New, key) // 这里用sha1，也可以改成别的
+h.Write([]byte(textToProtected))
+textDigest := base64.URLEncoding.EncodeToString(h.Sum(nil))
+textResult := textToProtected + &quot;:&quot; + keyHint + &quot;:&quot; + textDigest
+</code></pre>
+<p>得到的 textResult 就是我们期望的不可篡改信息。</p>
+<h3 id="验证签名过程">验证签名过程</h3>
+<p>如何验证是否被篡改：</p>
+<ol>
+<li>首先根据 textResult 分解得到 textToProtected、keyHint、textDigest</li>
+<li>然后根据 keyHint 查找到 key；</li>
+<li>再根据 textToProtected 和 key 算一次我们期望的信息摘要 textDigestExp。</li>
+<li>如果 textDigestExp 和 textDigest 相同，表示没被篡改，否则则表示信息不可信，应丢弃。</li>
+</ol>
+<h2 id="对通讯内容进行加密">对通讯内容进行加密</h2>
+<p>如果我们希望更彻底的隐私保护，避免被窃听、被篡改、被钓鱼，那么数字签名就不顶用了，而需要对内容进行加密。</p>
+<p>加密算法上，一般分为对称加密和非对称加密。</p>
+<ul>
+<li>对称加密是指用什么样的密钥（key）加密，就用什么样的密钥解密</li>
+<li>非对称加密非常有趣。它有一对钥匙，分私钥（private key）和公钥（public key）。私钥自己拿着，永远不要给别人知道。公钥顾名思义是可以公开的，任何人都允许拿。
+<ul>
+<li>首先，通过公钥加密的文本，只有私钥才能解得开。这就解决了定向发送的问题。网络中间人看到加密后的信息是没有用的，因为没有私钥解不开。</li>
+<li>另外，私钥拥有人可以用私钥对信息进行数字签名（防止篡改），所有有公钥的人都可以验证签名，以确认信息的确来自私钥的拥有者，这就解决了请求来源验证的问题。</li>
+</ul>
+</li>
+</ul>
+<h3 id="https-协议">HTTPS 协议。</h3>
+<p>我要访问一个网站。我怎么才能避免被窃听、被篡改、被钓鱼？</p>
+<blockquote>
+<p>使用 HTTPS 协议</p>
+</blockquote>
+<p>数字签名的公证书，简称数字证书，里面记录了网站 B 的域名（domain），和对应的公钥（B-public-key），还有证书的颁发人 G 的代号。<br>
+它表示：域名 domain 对应的公钥是 B-public-key，它是由权威机构 G 做出的公证，因为上面有 G 的数字签名。<br>
+数字证书并不需要临时生成，而是提前在网站部署时就已经生成好了，而且也可以随意传递给任何人，因为它是完全公开的信息。</p>
+<p>前提：我们客户端 A 已经提前拥有第三方权威机构 G 的公钥（G-public-key）了。<br>
+过程：</p>
+<ol>
+<li>客户端 A 向网站 B 请求网站的数字证书。</li>
+<li>网站 B 返回它的数字证书。</li>
+<li>客户端 A 收到数字证书，用 G-public-key 验证该数字证书的确由权威机构 G 认证，于是选择相信证书里面的 (domain, public-key) 信息。</li>
+<li>客户端 A 检查证书中的 domain，和我们要访问的网站 B 域名是否一致。如果一致，于是相信证书中的 public-key 就是网站 B 的公钥（B-public-key）。</li>
+</ol>
+<p><strong>有了 B-public-key，客户端 A 就可以愉快地上网，不必担心网络通讯的安全了。</strong></p>
+<p>TODO HTTPS 协议的加密和解密过程。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#%E7%BD%91%E7%BB%9C%E7%8E%AF%E5%A2%83%E7%9A%84%E4%BF%A1%E6%81%AF%E5%AE%89%E5%85%A8%E9%97%AE%E9%A2%98">网络环境的信息安全问题</a>
+<ul>
+<li><a href="#%E9%A6%96%E5%85%88%E6%98%AF%E6%80%8E%E4%B9%88%E9%98%B2%E7%AF%A1%E6%94%B9">首先是怎么防篡改。</a>
+<ul>
+<li><a href="#%E7%AD%BE%E5%90%8D%E8%BF%87%E7%A8%8B">签名过程</a></li>
+<li><a href="#%E9%AA%8C%E8%AF%81%E7%AD%BE%E5%90%8D%E8%BF%87%E7%A8%8B">验证签名过程</a></li>
+</ul>
+</li>
+<li><a href="#%E5%AF%B9%E9%80%9A%E8%AE%AF%E5%86%85%E5%AE%B9%E8%BF%9B%E8%A1%8C%E5%8A%A0%E5%AF%86">对通讯内容进行加密</a>
+<ul>
+<li><a href="#https-%E5%8D%8F%E8%AE%AE">HTTPS 协议。</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://xxgf.github.io/post/xu-shi-wei-de-jia-gou-ke-si-wang-luo-bian-cheng-jie-kou/">
+              <h3 class="post-title">
+                许式伟的架构课（四）：网络 - 编程接口
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: '346dd1e6861a8d5154be',
+    clientSecret: '11fa9ccf79622cb14f892b083428ae40f9f28f13',
+    repo: 'XXGF.github.io',
+    owner: 'XXGF',
+    admin: ['XXGF'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://xxgf.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

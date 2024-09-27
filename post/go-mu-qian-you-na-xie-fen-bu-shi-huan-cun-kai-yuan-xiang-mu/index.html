@@ -1,0 +1,600 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Go目前有哪些分布式缓存开源项目 | Gridea</title>
+<link rel="shortcut icon" href="https://xxgf.github.io//favicon.ico?v=1727422712163">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://xxgf.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="Go目前有哪些分布式缓存开源项目 | Gridea - Atom Feed" href="https://xxgf.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="Go开源分布式缓存项目简介
+GoCache
+GitHub链接：/https://github.com/patrickmn/go-cache/
+概述
+GoCache 是一个简单易用的内存缓存库，支持过期时间和自动淘汰机制。它适用于单机应用，不..." />
+    <meta name="keywords" content="分布式缓存" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://xxgf.github.io/">
+  <img class="avatar" src="https://xxgf.github.io//images/avatar.png?v=1727422712163" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+      
+        <a href="/note" class="menu">
+          笔记
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              Go目前有哪些分布式缓存开源项目
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-07-15
+              </span>
+              <span>
+                13 min read
+              </span>
+              
+                <a href="https://xxgf.github.io/tag/-35883ufJ/" class="post-tag">
+                  # 分布式缓存
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h1 id="go开源分布式缓存项目简介">Go开源分布式缓存项目简介</h1>
+<h2 id="gocache">GoCache</h2>
+<p>GitHub链接：<a href="https://github.com/patrickmn/go-cache">/https://github.com/patrickmn/go-cache/</a></p>
+<h3 id="概述">概述</h3>
+<p>GoCache 是一个简单易用的<strong>内存缓存库</strong>，支持过期时间和自动淘汰机制。<strong>它适用于单机应用，不支持分布式缓存。</strong></p>
+<p><strong>这个库的特性包括：</strong></p>
+<ul>
+<li>
+<p>并发安全：GoCache使用了读写锁，所以它是并发安全的。无论你的应用程序有多少个goroutine同时访问缓存，GoCache都可以保证数据的一致性。</p>
+</li>
+<li>
+<p>过期策略：GoCache支持设置每个条目的过期时间。当条目过期后，GoCache会自动删除它。你也可以选择禁用过期策略，这样条目就永远不会过期。</p>
+</li>
+<li>
+<p>自动清理：GoCache会定期清理过期的条目，以释放内存。你可以设置清理间隔的时间。</p>
+</li>
+<li>
+<p>统计信息：GoCache可以提供缓存的统计信息，如命中率、丢失率等。</p>
+</li>
+</ul>
+<h3 id="原理概述">原理概述</h3>
+<p>在内存中维护了一个map来缓存数据，不支持回源。</p>
+<pre><code class="language-go">type cache struct {
+	defaultExpiration time.Duration
+	items             map[string]Item       // 缓存数据的map
+	mu                sync.RWMutex
+	onEvicted         func(string, interface{})
+	janitor           *janitor
+}
+type Item struct {
+	Object     interface{}
+	Expiration int64
+}
+</code></pre>
+<h3 id="使用示例">使用示例</h3>
+<pre><code class="language-go">func main() {
+	// 创建一个缓存，所有缓存项都将在5分钟后过期，每10分钟清理一次过期项
+	c := cache.New(5*time.Minute, 10*time.Minute)
+
+	// 将一个值存入缓存
+	c.Set(&quot;myKey&quot;, &quot;myValue&quot;, cache.DefaultExpiration)
+
+	// 从缓存中获取一个值
+	v, found := c.Get(&quot;myKey&quot;)
+	if found {
+		fmt.Println(v)
+	}
+}
+</code></pre>
+<h2 id="go-redis">Go-Redis</h2>
+<p>GitHub链接：<a href="https://github.com/go-redis/redis">/https://github.com/go-redis/redis/</a></p>
+<p>Go-Redis是一个基于Golang的Redis客户端库，它提供了分布式缓存的功能。<br>
+它支持Redis的所有特性，并提供了简单易用的API，方便开发者进行缓存操作。</p>
+<p><strong>其实就是基于Redis去做缓存。</strong></p>
+<p>因为是用Redis统一存储数据，所以是支持分布式下进行数据缓存的。</p>
+<h3 id="使用示例-2">使用示例</h3>
+<pre><code class="language-go">func main() {
+	// 创建 Redis 客户端
+	client := createRedisClient()
+
+	// 设置缓存值
+	err := setCacheValue(client, &quot;mykey&quot;, &quot;myvalue&quot;)
+	if err != nil {
+		fmt.Println(&quot;设置缓存值出错：&quot;, err)
+		return
+	}
+
+	// 获取缓存值
+	value, err := getCacheValue(client, &quot;mykey&quot;)
+	if err != nil {
+		fmt.Println(&quot;获取缓存值出错：&quot;, err)
+		return
+	}
+	fmt.Println(&quot;缓存值为：&quot;, value)
+}
+
+func createRedisClient() *redis.Client {
+	client := redis.NewClient(&amp;redis.Options{
+		Addr:     &quot;localhost:6379&quot;, // Redis 服务器地址和端口号
+		Password: &quot;&quot;,               // Redis 服务器密码
+		DB:       0,                // 使用默认的数据库
+	})
+
+	return client
+}
+
+func setCacheValue(client *redis.Client, key string, value string) error {
+	ctx := context.TODO()
+	err := client.Set(ctx, key, value, 0).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func getCacheValue(client *redis.Client, key string) (string, error) {
+	ctx := context.TODO()
+	value, err := client.Get(ctx, key).Result()
+	if err != nil {
+		return &quot;&quot;, err
+	}
+	return value, nil
+}
+</code></pre>
+<h2 id="bigcache">BigCache</h2>
+<p>GitHub链接：<a href="https://github.com/allegro/bigcache">/https://github.com/allegro/bigcache/</a></p>
+<h3 id="概述-2">概述</h3>
+<p>BigCache 是一个高性能的分布式缓存库，它使用了<strong>多核心和无锁技术</strong>来提供快速的读写操作，适用于高并发场景。</p>
+<p>BigCache 专为大规模数据集和高并发访问场景而设计。它采用了<strong>LRU算法和多级缓存结构</strong>，能够有效地提供高吞吐量和低延迟的缓存服务。</p>
+<p>BigCache 使用用了自定义的<strong>哈希表和LRU算法</strong>来管理数据。它支持多核并发访问和数据的自动过期，适用于高并发场景下的分布式缓存。</p>
+<p>BigCache 是一种高性能的键值对存储，它在高负载下的性能表现很好。它是在Go语言中开发的，专门用来处理大量的数据，同时保持高速的读写速度。</p>
+<p><strong>BigCache 的主要特点包括：</strong></p>
+<ul>
+<li>快速：BigCache 使用了一种特殊的哈希算法和缓存替换策略，可以在高负载下保持高速的读写速度。</li>
+<li>支持大量的数据：BigCache 可以处理大量的数据，不会因为数据量的增加而导致性能下降。</li>
+<li>内存效率：BigCache 使用了一种特殊的数据结构，可以有效地管理内存，防止内存泄漏。</li>
+<li>简单易用：BigCache 的API设计得非常简单，只需要几行代码就可以创建一个高性能的键值对存储。</li>
+<li>高速读写：BigCache使用了一种特殊的哈希表结构和预分配内存，以实现快速的读写操作。</li>
+<li>低GC压力：BigCache的设计避免了频繁的垃圾回收（GC）操作，从而减少了对系统性能的影响。</li>
+<li>并发安全：BigCache在设计上考虑了并发访问的情况，保证了数据操作的安全性。</li>
+</ul>
+<h3 id="原理简介">原理简介</h3>
+<h4 id="分片设计">分片设计</h4>
+<p>BigCache将所有的键值对数据存储在分片（Shards）中，每个分片都有自己的锁。这样做的目的是减少锁的竞争，从而提高并发性能。分片的数量在初始化BigCache时就已经确定，并且在后续的操作中不会改变。</p>
+<pre><code class="language-go">type BigCache struct {
+	shards     []*cacheShard    // 存储数据的分片集合。
+	lifeWindow uint64
+	clock      clock
+	hash       Hasher
+	config     Config
+	shardMask  uint64
+	close      chan struct{}
+}
+</code></pre>
+<h4 id="存储结构">存储结构</h4>
+<p>BigCache使用了一种特殊的数据结构来存储键值对。**每个键值对都会被存储在一个连续的内存块中，这个内存块包含了键，值，以及一些元数据。**这种设计可以减少内存碎片，提高内存的利用率。</p>
+<p>存储数据的特殊结构：其实是一个字节队列。每个缓存数据入队，都对把入队后在队列中的index返回，并存储在map中。</p>
+<pre><code class="language-go">type cacheShard struct {
+	hashmap     map[uint64]uint32   
+	entries     queue.BytesQueue    // 存储数据的特殊结构，是Bigcache自己封装的字节队列
+	lock        sync.RWMutex
+	entryBuffer []byte
+	onRemove    onRemoveCallback
+
+	isVerbose    bool
+	statsEnabled bool
+	logger       Logger
+	clock        clock
+	lifeWindow   uint64
+
+	hashmapStats map[uint64]uint32
+	stats        Stats
+	cleanEnabled bool
+}
+</code></pre>
+<h4 id="键值对的哈希算法">键值对的哈希算法</h4>
+<p>BigCache使用了一种特殊的哈希算法来定位键值对。这种哈希算法可以在O(1)的时间复杂度内找到键值对，保证了读写操作的高速度。</p>
+<p><strong>其实就是用了一个map来存储缓存key在queue.BytesQueue中的索引</strong></p>
+<pre><code class="language-go">type cacheShard struct {
+	hashmap     map[uint64]uint32   // 存储缓存key，在字节队列中的index
+	entries     queue.BytesQueue    // 存储数据的特殊结构，是Bigcache自己封装的字节队列
+	lock        sync.RWMutex
+	entryBuffer []byte
+	onRemove    onRemoveCallback
+
+	isVerbose    bool
+	statsEnabled bool
+	logger       Logger
+	clock        clock
+	lifeWindow   uint64
+
+	hashmapStats map[uint64]uint32
+	stats        Stats
+	cleanEnabled bool
+}
+</code></pre>
+<h4 id="缓存清理策略">缓存清理策略</h4>
+<p>BigCache使用了一种被称为“Least Recently Used”（LRU）的缓存清理策略。当内存不足时，BigCache会删除最近最少使用的键值对，以便为新的键值对腾出空间。</p>
+<h3 id="使用示例-3">使用示例</h3>
+<pre><code class="language-go">func main() {
+	//bigcache.NewBigCache(bigcache.DefaultConfig(10 * time.Minute))
+	cache, _ := bigcache.New(context.Background(), bigcache.DefaultConfig(10*time.Minute))
+	// 缓存key
+	cache.Set(&quot;my-unique-key&quot;, []byte(&quot;value&quot;))
+	// 获取key
+	entry, _ := cache.Get(&quot;my-unique-key&quot;)
+	fmt.Println(string(entry))
+	// 删除key
+	cache.Delete(&quot;my-unique-key&quot;)
+}
+</code></pre>
+<p>Bigcache和Gocache类似，本身身并不直接支持分布式缓存，它设计为在单个节点上运行。<br>
+相比Gocache，由于它特殊的存储设计和索引设计，更适合用于需要<strong>快速读写大量数据</strong>的场景。</p>
+<h2 id="freecache">FreeCache</h2>
+<h3 id="概述-3">概述</h3>
+<p>FreeCache是另一种在Go语言中实现的高性能的键值对缓存库。它使用了一种特殊的内存管理策略，可以有效地处理大量的小数据，并减少内存碎片。</p>
+<p>以下是FreeCache的一些主要特性：</p>
+<ul>
+<li>
+<p>高性能：FreeCache使用了一种高效的数据结构和算法，可以在高负载下保持高速的读写速度。</p>
+</li>
+<li>
+<p>缓存键值对：FreeCache可以存储任意的键值对，包括字符串、数字、结构体等。</p>
+</li>
+<li>
+<p>内存管理：FreeCache使用了一种特殊的内存管理策略，可以有效地处理大量的小数据，并减少内存碎片。</p>
+</li>
+<li>
+<p>缓存清理策略：FreeCache使用了一种被称为“Least Recently Used”（LRU）的缓存清理策略。当内存不足时，FreeCache会删除最近最少使用的键值对，以便为新的键值对腾出空间。</p>
+</li>
+</ul>
+<h3 id="原理简介-2">原理简介</h3>
+<h4 id="缓存结构">缓存结构</h4>
+<p>FreeCache 使用一个哈希表来存储缓存项，哈希表的每个槽位存储一个链表，用于解决哈希冲突。<br>
+每个链表节点包含了键、值和过期时间等信息。<br>
+这种设计使得在哈希表中进行缓存项的查找和插入操作具有较高的效率。</p>
+<pre><code class="language-go">// Cache is a freecache instance.
+type Cache struct {
+	locks    [segmentCount]sync.Mutex
+    // 默认 256 个段
+	segments [segmentCount]segment
+}
+
+// 一个段包含 256 个插槽
+// 一个插槽是按 Hash16 值排序的缓存数据项的指针数组，该条目可以通过键的哈希值查找。
+type segment struct {
+	rb            RingBuf // 存储数据的环形缓存区
+	segId         int
+	_             uint32
+	missCount     int64
+	hitCount      int64
+	entryCount    int64
+	totalCount    int64      // 环形缓存区的缓存数据项的数量，包含删除的
+	totalTime     int64      // used to calculate least recent used entry.
+	timer         Timer      // Timer giving current time
+	vacuumLen     int64      // up to vacuumLen, new data can be written without overwriting old data.
+	slotLens      [256]int32 // The actual length for every slot.
+	slotCap       int32      // max number of entry pointers a slot can hold.
+	slotsData     []entryPtr // shared by all 256 slots
+}
+
+// 环形缓存区，满了之后，新数据会覆盖旧数据
+type RingBuf struct {
+	begin int64 // beginning offset of the data stream.
+	end   int64 // ending offset of the data stream.
+	data  []byte
+	index int //range from '0' to 'len(rb.data)-1'
+}
+
+// 缓存数据项的指针，指向环形缓存区
+type entryPtr struct {
+	offset   int64  // entry offset in ring buffer
+	hash16   uint16 // entries are ordered by hash16 in a slot.
+	keyLen   uint16 // used to compare a key
+	reserved uint32
+}
+</code></pre>
+<h4 id="内存管理">内存管理</h4>
+<p>FreeCache 通过缓存key的hash值来找到段，这个很好理解。</p>
+<pre><code class="language-go">func (cache *Cache) Set(key, value []byte, expireSeconds int) (err error) {
+	hashVal := hashFunc(key)
+	segID := hashVal &amp; segmentAndOpVal
+	cache.locks[segID].Lock()
+    // 通过哈希值找到段
+	err = cache.segments[segID].set(key, value, hashVal, expireSeconds)
+	cache.locks[segID].Unlock()
+	return
+}
+</code></pre>
+<p>那又是如何找到在环形缓存区的写入位置的呢? 见下列代码中的编号注释</p>
+<pre><code class="language-go">func (seg *segment) set(key, value []byte, hashVal uint64, expireSeconds int) (err error) {
+	// 1. 通过哈希值找到槽位ID
+	slotId := uint8(hashVal &gt;&gt; 8)
+	hash16 := uint16(hashVal &gt;&gt; 16)
+	slot := seg.getSlot(slotId)
+	idx, match := seg.lookup(slot, hash16, key)
+}
+
+func (seg *segment) getSlot(slotId uint8) []entryPtr {
+    // 2. 通过槽位Id找到在 []entryPtr 的index
+	slotOff := int32(slotId) * seg.slotCap
+	return seg.slotsData[slotOff : slotOff+seg.slotLens[slotId] : slotOff+seg.slotCap]
+}
+
+func (seg *segment) set(key, value []byte, hashVal uint64, expireSeconds int) (err error) {
+
+	if match {
+        // 3. 通过index，找到指向环形缓存区的指针
+		matchedPtr := &amp;slot[idx]
+		if hdr.valCap &gt;= hdr.valLen {
+			//in place overwrite
+			atomic.AddInt64(&amp;seg.totalTime, int64(hdr.accessTime)-int64(originAccessTime))
+            // 4. 往环形缓存区写入数据
+			seg.rb.WriteAt(hdrBuf[:], matchedPtr.offset)
+			seg.rb.WriteAt(value, matchedPtr.offset+ENTRY_HDR_SIZE+int64(hdr.keyLen))
+			atomic.AddInt64(&amp;seg.overwrites, 1)
+			return
+		}
+	} 
+}
+</code></pre>
+<h4 id="并发安全">并发安全</h4>
+<p>FreeCache 使用读写锁来保证多个并发访问的安全性。<br>
+对于读操作，多个线程可以同时进行，不会出现数据竞争。<br>
+对于写操作，只允许一个线程进行，其他线程需要等待。这<br>
+种设计在保证数据一致性的同时，允许高并发的读取操作。</p>
+<pre><code class="language-go">// Cache is a freecache instance.
+type Cache struct {
+	locks    [segmentCount]sync.Mutex  // 每个段都有一把互斥锁
+	segments [segmentCount]segment
+}
+</code></pre>
+<h4 id="缓存淘汰策略">缓存淘汰策略</h4>
+<p>FreeCache 采用类似于 LRU (Least Recently Used) 的缓存淘汰策略。<br>
+因为FreeCache是采用容量固定的环形缓存区，来存储缓存数据的，所以当缓存数据超出容量的时候，新数据自然会覆盖最早加入的数据。也就是 LRU (Least Recently Used) 的缓存淘汰策略。</p>
+<h3 id="使用示例-4">使用示例</h3>
+<pre><code class="language-go">func main() {
+	cache := freecache.NewCache(1024 * 1024) // 创建一个大小为 1MB 的缓存
+
+	key := []byte(&quot;key&quot;)
+	value := []byte(&quot;value&quot;)
+
+	// 设置缓存项
+	cache.Set(key, value, 0)
+
+	// 获取缓存项
+	result, err := cache.Get(key)
+	if err == nil {
+		fmt.Println(&quot;Value:&quot;, string(result))
+	}
+
+	// 删除缓存项
+	cache.Del(key)
+}
+</code></pre>
+<p><strong>FreeCache 是一个基于 Golang 的开源缓存项目，它主要专注于提供单机环境下的缓存解决方案，并不直接支持分布式缓存。</strong></p>
+<h2 id="其他">其他</h2>
+<p>剩下的就是和Redis一样，是基于某个存储中间件构建的缓存。<br>
+因为依赖第三方中间件，比较重，所以这些不在考虑的范围内。</p>
+<h2 id="groupcache">Groupcache</h2>
+<p>GitHub链接：<a href="https://github.com/golang/groupcache">/https://github.com/golang/groupcache/</a></p>
+<p>Groupcache是一个由Golang开发的分布式缓存库，它提供了简单的API和高效的缓存机制。<br>
+它支持数据的自动加载和缓存失效等功能，并可以通过一致性哈希算法实现数据的分片和负载均衡，广泛应用于大规模分布式系统中。<br>
+Groupcache提供了高效的缓存机制，能够在多个节点之间共享数据，并具备自动的数据加载和缓存失效处理能力。</p>
+<h2 id="总结">总结</h2>
+<p>GroupCache 提供了了回源策略。<br>
+其他功能待探索。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#go%E5%BC%80%E6%BA%90%E5%88%86%E5%B8%83%E5%BC%8F%E7%BC%93%E5%AD%98%E9%A1%B9%E7%9B%AE%E7%AE%80%E4%BB%8B">Go开源分布式缓存项目简介</a>
+<ul>
+<li><a href="#gocache">GoCache</a>
+<ul>
+<li><a href="#%E6%A6%82%E8%BF%B0">概述</a></li>
+<li><a href="#%E5%8E%9F%E7%90%86%E6%A6%82%E8%BF%B0">原理概述</a></li>
+<li><a href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B">使用示例</a></li>
+</ul>
+</li>
+<li><a href="#go-redis">Go-Redis</a>
+<ul>
+<li><a href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B-2">使用示例</a></li>
+</ul>
+</li>
+<li><a href="#bigcache">BigCache</a>
+<ul>
+<li><a href="#%E6%A6%82%E8%BF%B0-2">概述</a></li>
+<li><a href="#%E5%8E%9F%E7%90%86%E7%AE%80%E4%BB%8B">原理简介</a>
+<ul>
+<li><a href="#%E5%88%86%E7%89%87%E8%AE%BE%E8%AE%A1">分片设计</a></li>
+<li><a href="#%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84">存储结构</a></li>
+<li><a href="#%E9%94%AE%E5%80%BC%E5%AF%B9%E7%9A%84%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95">键值对的哈希算法</a></li>
+<li><a href="#%E7%BC%93%E5%AD%98%E6%B8%85%E7%90%86%E7%AD%96%E7%95%A5">缓存清理策略</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B-3">使用示例</a></li>
+</ul>
+</li>
+<li><a href="#freecache">FreeCache</a>
+<ul>
+<li><a href="#%E6%A6%82%E8%BF%B0-3">概述</a></li>
+<li><a href="#%E5%8E%9F%E7%90%86%E7%AE%80%E4%BB%8B-2">原理简介</a>
+<ul>
+<li><a href="#%E7%BC%93%E5%AD%98%E7%BB%93%E6%9E%84">缓存结构</a></li>
+<li><a href="#%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86">内存管理</a></li>
+<li><a href="#%E5%B9%B6%E5%8F%91%E5%AE%89%E5%85%A8">并发安全</a></li>
+<li><a href="#%E7%BC%93%E5%AD%98%E6%B7%98%E6%B1%B0%E7%AD%96%E7%95%A5">缓存淘汰策略</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B-4">使用示例</a></li>
+</ul>
+</li>
+<li><a href="#%E5%85%B6%E4%BB%96">其他</a></li>
+<li><a href="#groupcache">Groupcache</a></li>
+<li><a href="#%E6%80%BB%E7%BB%93">总结</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://xxgf.github.io/post/wang-guan-de-zhu-yao-gong-neng/">
+              <h3 class="post-title">
+                网关的主要功能
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: '346dd1e6861a8d5154be',
+    clientSecret: '11fa9ccf79622cb14f892b083428ae40f9f28f13',
+    repo: 'XXGF.github.io',
+    owner: 'XXGF',
+    admin: ['XXGF'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://xxgf.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

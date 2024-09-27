@@ -1,0 +1,265 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Golang的Option设计模式介绍 | Gridea</title>
+<link rel="shortcut icon" href="https://xxgf.github.io//favicon.ico?v=1727422712163">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://xxgf.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="Golang的Option设计模式介绍 | Gridea - Atom Feed" href="https://xxgf.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="简介
+这种模式在Go语言中经常被用于配置和初始化对象。
+Option模式的主要目标是将对象的创建和配置分离，简化对象的创建和默认配置的复杂性，同时保持代码的整洁和可读性。这种模式特别适用于那些有许多可选配置参数的对象。
+在Go语言中，Opt..." />
+    <meta name="keywords" content="Golang" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://xxgf.github.io/">
+  <img class="avatar" src="https://xxgf.github.io//images/avatar.png?v=1727422712163" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+      
+        <a href="/note" class="menu">
+          笔记
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              Golang的Option设计模式介绍
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-07-28
+              </span>
+              <span>
+                3 min read
+              </span>
+              
+                <a href="https://xxgf.github.io/tag/qfhrI8RLK/" class="post-tag">
+                  # Golang
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h1 id="简介">简介</h1>
+<p>这种模式在Go语言中经常被用于配置和初始化对象。</p>
+<p>Option模式的主要目标是将对象的创建和配置分离，简化对象的创建和默认配置的复杂性，同时保持代码的整洁和可读性。这种模式特别适用于那些有许多可选配置参数的对象。</p>
+<p>在Go语言中，Option模式通常通过函数作为参数来实现。这些函数接受一个配置对象，对其进行修改，然后返回。这样，就可以在创建对象时，按需选择和应用任何数量的配置函数。</p>
+<p>示例：</p>
+<pre><code class="language-go">type Server struct {
+    address string
+    port    int
+}
+
+type ServerOption func(*Server)
+
+func WithAddress(address string) ServerOption {
+    return func(s *Server) {
+        s.address = address
+    }
+}
+
+func WithPort(port int) ServerOption {
+    return func(s *Server) {
+        s.port = port
+    }
+}
+
+func NewServer(opts ...ServerOption) *Server {
+    s := &amp;Server{}
+    for _, opt := range opts {
+        opt(s)
+    }
+    return s
+}
+
+func main() {
+    s := NewServer(WithAddress(&quot;localhost&quot;), WithPort(8080))
+    fmt.Println(s.address) // 输出: localhost
+    fmt.Println(s.port)    // 输出: 8080
+}
+</code></pre>
+<p>在上述代码中，Server有两个配置参数：address和port。我们为每个参数定义了一个对应的ServerOption函数：WithAddress和WithPort。然后，我们在NewServer函数中，接受一个ServerOption函数的切片，并将每个选项应用于新创建的Server对象。这样，我们就可以在创建Server对象时，灵活地配置它的参数。</p>
+<h1 id="解决了什么问题">解决了什么问题？</h1>
+<p>参数过多：在某些对象或函数需要大量参数，且许多参数都有合理的默认值时，Option模式可以简化这些复杂的函数签名，使得代码更加清晰易读。</p>
+<p>易于扩展：当新的配置项需要添加时，Option模式可以轻松地添加新的选项，而无需改变原来的函数签名或者构造函数。</p>
+<p>灵活性：Option模式允许用户按需配置对象，而无需了解所有的配置项。</p>
+<h1 id="有什么优缺点">有什么优缺点</h1>
+<h2 id="option设计模式的优点">Option设计模式的优点：</h2>
+<p>提高代码的可读性：通过使用描述性的函数，Option模式可以使代码更加易于理解。</p>
+<p>提高代码的可维护性：Option模式使得添加新的配置选项变得简单，不需要改变已有的代码。</p>
+<p>灵活和强大：Option模式允许用户按需配置对象，可以应对各种复杂的配置需求。</p>
+<h2 id="option设计模式的缺点">Option设计模式的缺点：</h2>
+<p>增加了代码的复杂性：对于简单的配置需求，Option模式可能会引入不必要的复杂性。</p>
+<p>可能导致运行时错误：如果选项函数没有正确地设置参数，可能会在运行时出现错误，而编译器无法检查这种错误。</p>
+<p>学习曲线：对于不熟悉Option模式的开发者，可能需要花费一些时间来理解这种设计模式。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#%E7%AE%80%E4%BB%8B">简介</a></li>
+<li><a href="#%E8%A7%A3%E5%86%B3%E4%BA%86%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98">解决了什么问题？</a></li>
+<li><a href="#%E6%9C%89%E4%BB%80%E4%B9%88%E4%BC%98%E7%BC%BA%E7%82%B9">有什么优缺点</a>
+<ul>
+<li><a href="#option%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E7%9A%84%E4%BC%98%E7%82%B9">Option设计模式的优点：</a></li>
+<li><a href="#option%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%BC%BA%E7%82%B9">Option设计模式的缺点：</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://xxgf.github.io/post/groupcache-de-you-que-dian/">
+              <h3 class="post-title">
+                GroupCache 的不足与优化方案
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: '346dd1e6861a8d5154be',
+    clientSecret: '11fa9ccf79622cb14f892b083428ae40f9f28f13',
+    repo: 'XXGF.github.io',
+    owner: 'XXGF',
+    admin: ['XXGF'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://xxgf.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,262 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GroupCache 源码解析 | Gridea</title>
+<link rel="shortcut icon" href="https://xxgf.github.io//favicon.ico?v=1727422712163">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://xxgf.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="GroupCache 源码解析 | Gridea - Atom Feed" href="https://xxgf.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="主体逻辑
+Groupcache 的逻辑思路很简单，我简单的总结为三种获取方式：
+
+通过本地缓存获取
+通过对应节点缓存获取
+通过已定义好的回源方法获取
+以上三种获取数据的方式，就是GroupCache的核心。
+
+查询逻辑：groupcahce..." />
+    <meta name="keywords" content="分布式缓存" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://xxgf.github.io/">
+  <img class="avatar" src="https://xxgf.github.io//images/avatar.png?v=1727422712163" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+      
+        <a href="/note" class="menu">
+          笔记
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              GroupCache 源码解析
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-07-17
+              </span>
+              <span>
+                3 min read
+              </span>
+              
+                <a href="https://xxgf.github.io/tag/-35883ufJ/" class="post-tag">
+                  # 分布式缓存
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h1 id="主体逻辑">主体逻辑</h1>
+<p>Groupcache 的逻辑思路很简单，我简单的总结为三种获取方式：</p>
+<ul>
+<li>通过本地缓存获取</li>
+<li>通过对应节点缓存获取</li>
+<li>通过已定义好的回源方法获取<br>
+以上三种获取数据的方式，就是GroupCache的核心。</li>
+</ul>
+<p>查询逻辑：groupcahce 服务首先查询自己的本地缓存自己本地缓存无法找到再从周边节点搜寻，周边节点的缓存找不到就会调用你已经定义好的资源获取方法来获取资源。</p>
+<p>缓存逻辑：如果是通过通过本地缓存获取到资源则无需缓存处理，如果是通过其他节点获取到的资源则会缓存到本地的hotcache，如果是通过已定义的方法获取的资源则会缓存到本地的maincache。</p>
+<h1 id="代码架构">代码架构</h1>
+<p>主目录下主要文件有：</p>
+<h2 id="groupcachego">groupcache.go</h2>
+<p>其文件中的 Group 结构是代码的主题，包含了节点获取接口 peers，自定义获取资源方法 getter，存储结构mainCache，hotCache，同时并发执行单次结构 loadGroup。</p>
+<h2 id="byteviewgo">byteview.go</h2>
+<p>定义了基础存储接口，存储结构是 groupcache 的重要结构。</p>
+<h2 id="sinksgo">sinks.go</h2>
+<p>定义了资源获取结构。</p>
+<h2 id="peergo">peer.go</h2>
+<p>定义了节点</p>
+<h2 id="httpgo">http.go</h2>
+<p>只包含了一个HTTPPool这样的一个结构，但我认为这个文件结构才是理解整体的关键。<br>
+这个结构定义了实现分布式的所有方法，如果你是单体部署那你非常好理解这个包，其实就是从 group 结构中取资源，取到后在本地缓存。说白了基本是不需要这个包来实现这个逻辑。所以分布式才是这个包的灵魂。</p>
+<p>这个结构定义了远程节点的注册，选取方法。以及作为服务端获取本地资源的方法和作为客户端获取远程节点资源的方法。所以这个HTTPPool结构我们会去重点说。</p>
+<p>主目录下的目录有：</p>
+<ul>
+<li>consistenthash文件夹 中定义Map结构用于节点选取。</li>
+<li>lru文件夹 中定义的Cache结构是缓存的主要结构。</li>
+<li>singleflight文件夹 中定义了单个资源同时获取只执行一次的获取逻辑。</li>
+</ul>
+<h1 id="源码解读">源码解读</h1>
+<h2 id="group-主体">Group 主体</h2>
+<p>整个groupcache的主体逻辑可以说是就一个Get方法，所以我们先看这个方法，来看作者是如果实现根据不同优先级来执行三种获取方法并缓存数据的逻辑。</p>
+<h1 id="问题">问题</h1>
+<p>Q1： GroupCache为什么只增不删？<br>
+A1：答案是一致性。一个分布式的缓存系统需要强一致性，GroupCache 使用只增不删改的方式来在不牺牲性能的基础上保持了一致性。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#%E4%B8%BB%E4%BD%93%E9%80%BB%E8%BE%91">主体逻辑</a></li>
+<li><a href="#%E4%BB%A3%E7%A0%81%E6%9E%B6%E6%9E%84">代码架构</a>
+<ul>
+<li><a href="#groupcachego">groupcache.go</a></li>
+<li><a href="#byteviewgo">byteview.go</a></li>
+<li><a href="#sinksgo">sinks.go</a></li>
+<li><a href="#peergo">peer.go</a></li>
+<li><a href="#httpgo">http.go</a></li>
+</ul>
+</li>
+<li><a href="#%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB">源码解读</a>
+<ul>
+<li><a href="#group-%E4%B8%BB%E4%BD%93">Group 主体</a></li>
+</ul>
+</li>
+<li><a href="#%E9%97%AE%E9%A2%98">问题</a></li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://xxgf.github.io/post/o2-fa-zhan-fang-xiang-he-ji-zhu-tan-suo/">
+              <h3 class="post-title">
+                O2发展方向和技术探索
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: '346dd1e6861a8d5154be',
+    clientSecret: '11fa9ccf79622cb14f892b083428ae40f9f28f13',
+    repo: 'XXGF.github.io',
+    owner: 'XXGF',
+    admin: ['XXGF'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://xxgf.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

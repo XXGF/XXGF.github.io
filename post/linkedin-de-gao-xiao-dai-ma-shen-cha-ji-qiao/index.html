@@ -1,0 +1,252 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LinkedIn的高效代码审查技巧 | Gridea</title>
+<link rel="shortcut icon" href="https://xxgf.github.io//favicon.ico?v=1727422712163">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://xxgf.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="LinkedIn的高效代码审查技巧 | Gridea - Atom Feed" href="https://xxgf.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="
+英文： https://thenewstack.io/linkedin-code-review/
+中文：https://sakya.wang/2018/07/17/code-review-linkedin/
+
+我理解“为什么”了么？
+
+为..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://xxgf.github.io/">
+  <img class="avatar" src="https://xxgf.github.io//images/avatar.png?v=1727422712163" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+      
+        <a href="/note" class="menu">
+          笔记
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              LinkedIn的高效代码审查技巧
+            </h2>
+            <div class="post-info">
+              <span>
+                2024-01-29
+              </span>
+              <span>
+                5 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <blockquote>
+<p>英文： https://thenewstack.io/linkedin-code-review/<br>
+中文：https://sakya.wang/2018/07/17/code-review-linkedin/</p>
+</blockquote>
+<h1 id="我理解为什么了么">我理解“为什么”了么？</h1>
+<ul>
+<li>为了促进最佳审核并帮助您的团队扩展，每个代码更改提交都应包含一个设计概述，简要说明更改背后的动机。</li>
+<li>当需要从代码更改本身推断出基本原理时，很难提供高质量的代码审查。</li>
+<li>在提交代码审查之前，询问并期望提交者解释他们的动机是公平的。这也鼓励提交者在其提交信息中进行修改说明，从而提高代码文档的质量。</li>
+</ul>
+<h1 id="我给予了正面反馈了么">我给予了正面反馈了么？</h1>
+<p>在一个充满聪明人的组织中，干净的代码和整洁的测试覆盖率可以被视为理所当然。因此，代码审查反馈往往只关注代码中发现的问题和疑问。这是非常不幸的，因为大多数人需要积极的反馈才能感受到参与感和积极性 - 工程师也不例外。当审阅者在代码中看到好东西时，他们应该指出来并给出积极的反馈。这有助于提高团队动力，而且这种积极反馈往往具有传染性。与所有代码审查评论一样（下面有更多内容），任何积极的反馈都应该具体，解释为什么选中的代码写得很好。</p>
+<h1 id="我的代码评论解释清楚了么">我的代码评论解释清楚了么？</h1>
+<ul>
+<li>如有疑问，最好过度解释，而不是提供简洁的反馈，否则会产生更多问题并需要更多的来回沟通。</li>
+<li>解释可以很简单，例如“减少重复”、“提高覆盖率”或“使代码更易于测试”。</li>
+</ul>
+<h1 id="我感谢提交者的努力吗">我感谢提交者的努力吗？</h1>
+<p>一些代码更改不是最高质量的，需要返工。在这些情况下，重要的是仍然承认作者为更改所做的努力，即使他们的代码需要修改。表示感谢的最佳方式是通过提供高质量的反馈和体面的解释、承认好的想法（每次提交的代码中总是有好的东西！）并使用“谢谢”。</p>
+<h1 id="这条评论对我有用吗">这条评论对我有用吗？</h1>
+<ul>
+<li>提出这个问题是验证代码审查评论是否必要的简单而有效的方法。</li>
+<li>如果您认为特定评论评论对您没有用，请将其删除。</li>
+<li>无用的代码审查注释的典型示例是与代码格式相关的注释。代码样式和格式应该由自动化工具验证，而不是工程师。</li>
+</ul>
+<h1 id="测试完成部分是否足够彻底">“测试完成”部分是否足够彻底？</h1>
+<ul>
+<li>在LinkedIn，每个代码更改提交都有一个强制性的“测试完成”部分，需要填写。</li>
+<li>在开源世界中，使用GitHub作为示例，工程师可以在拉取请求描述中提交“测试完成”信息。</li>
+<li>“完成测试”应该取决于变化的严重程度和当前的测试覆盖水平。</li>
+<li>如果更改包含新的或更改的条件复杂性，那么期望它在单元测试中被涵盖是公平的。</li>
+<li>如果集成测试覆盖率不足，某些更改可能需要运行手动测试。在这些情况下，“测试完成”应包括有关测试场景和输出的信息。当更改改变程序的输出时，将新输出包含在“测试完成”部分中非常有用。</li>
+</ul>
+<h1 id="我的评论中是否太迂腐了">我的评论中是否太迂腐了？</h1>
+<ul>
+<li>有些代码审查有太多评论，以至于重要的问题（真正需要修复的问题）被不太重要的建议淹没了。</li>
+<li>对于给定团队来说，过于注重细节的评审可能会减慢评审周期，并给评审者和被评审者带来摩擦。</li>
+<li>拥有明确的审核期望、示例审核以及积极、有吸引力的审核文化是避免冗长、令人疲惫的审核周期的好方法。</li>
+</ul>
+<p>总之，拥有正式的代码审查流程有助于提高代码质量、团队学习和知识共享。当团队中的每个工程师都意识到两件重要的事情时，工作质量就会提高：其他人会阅读我的代码，所以它最好是好的，我必须解决收到的任何评论意见，所以我应该尝试编写我的代码第一次很好，以后可以节省自己的精力。当代码审查成为一种日常习惯时，团队每天都会练习提供和接收反馈。这是成长和进步的关键。</p>
+<p>在 LinkedIn，我们从过去的一百万次代码审查中学到了很多，我们渴望从下百万次中学到更多。在代码审查中投入的精力越多，团队进行出色代码审查的能力就越好，签入的代码质量就越高，构建的产品质量也越高。高质量的代码审查具有传染性！</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#%E6%88%91%E7%90%86%E8%A7%A3%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BA%86%E4%B9%88">我理解“为什么”了么？</a></li>
+<li><a href="#%E6%88%91%E7%BB%99%E4%BA%88%E4%BA%86%E6%AD%A3%E9%9D%A2%E5%8F%8D%E9%A6%88%E4%BA%86%E4%B9%88">我给予了正面反馈了么？</a></li>
+<li><a href="#%E6%88%91%E7%9A%84%E4%BB%A3%E7%A0%81%E8%AF%84%E8%AE%BA%E8%A7%A3%E9%87%8A%E6%B8%85%E6%A5%9A%E4%BA%86%E4%B9%88">我的代码评论解释清楚了么？</a></li>
+<li><a href="#%E6%88%91%E6%84%9F%E8%B0%A2%E6%8F%90%E4%BA%A4%E8%80%85%E7%9A%84%E5%8A%AA%E5%8A%9B%E5%90%97">我感谢提交者的努力吗？</a></li>
+<li><a href="#%E8%BF%99%E6%9D%A1%E8%AF%84%E8%AE%BA%E5%AF%B9%E6%88%91%E6%9C%89%E7%94%A8%E5%90%97">这条评论对我有用吗？</a></li>
+<li><a href="#%E6%B5%8B%E8%AF%95%E5%AE%8C%E6%88%90%E9%83%A8%E5%88%86%E6%98%AF%E5%90%A6%E8%B6%B3%E5%A4%9F%E5%BD%BB%E5%BA%95">“测试完成”部分是否足够彻底？</a></li>
+<li><a href="#%E6%88%91%E7%9A%84%E8%AF%84%E8%AE%BA%E4%B8%AD%E6%98%AF%E5%90%A6%E5%A4%AA%E8%BF%82%E8%85%90%E4%BA%86">我的评论中是否太迂腐了？</a></li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://xxgf.github.io/post/golang-shi-me-shi-hou-shi-yong-zhi-zhen/">
+              <h3 class="post-title">
+                【Golang】什么时候使用指针？
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: '346dd1e6861a8d5154be',
+    clientSecret: '11fa9ccf79622cb14f892b083428ae40f9f28f13',
+    repo: 'XXGF.github.io',
+    owner: 'XXGF',
+    admin: ['XXGF'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://xxgf.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

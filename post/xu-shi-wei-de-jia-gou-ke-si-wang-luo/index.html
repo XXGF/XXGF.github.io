@@ -1,0 +1,359 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>许式伟的架构课（四）：网络 - 宏观概念 | Gridea</title>
+<link rel="shortcut icon" href="https://xxgf.github.io//favicon.ico?v=1727422712163">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://xxgf.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="许式伟的架构课（四）：网络 - 宏观概念 | Gridea - Atom Feed" href="https://xxgf.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="IP网络模型
+
+网络协议
+
+
+要通讯，首先要有地址。数字物流世界的地址有三层。
+数据链路层地址：局域网所采纳的以太网（Ethernet）协议用的是 MAC 地址。一台计算机有一个或多个网卡，每个网卡会有自己的唯一标识即 MAC 地址。这个标..." />
+    <meta name="keywords" content="架构设计" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://xxgf.github.io/">
+  <img class="avatar" src="https://xxgf.github.io//images/avatar.png?v=1727422712163" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+      
+        <a href="/note" class="menu">
+          笔记
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              许式伟的架构课（四）：网络 - 宏观概念
+            </h2>
+            <div class="post-info">
+              <span>
+                2024-03-04
+              </span>
+              <span>
+                13 min read
+              </span>
+              
+                <a href="https://xxgf.github.io/tag/rbUcSskit/" class="post-tag">
+                  # 架构设计
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h1 id="ip网络模型">IP网络模型</h1>
+<figure data-type="image" tabindex="1"><img src="https://xxgf.github.io//post-images/1710763807848.webp" alt="" loading="lazy"></figure>
+<h2 id="网络协议">网络协议</h2>
+<figure data-type="image" tabindex="2"><img src="https://xxgf.github.io//post-images/1710764298609.webp" alt="" loading="lazy"></figure>
+<blockquote>
+<p>要通讯，首先要有地址。数字物流世界的地址有三层。<br>
+数据链路层地址：局域网所采纳的以太网（Ethernet）协议用的是 MAC 地址。一台计算机有一个或多个网卡，每个网卡会有自己的唯一标识即 MAC 地址。这个标识跟随网卡设备存在，和网络环境无关。你把计算机从北京搬到上海，MAC 地址保持不变。</p>
+<p>链路层的网络地址是位于第二层的 IP 地址。<br>
+IP 地址类似于门牌号：你家住在哪个城市哪条路几号。它决定了网络路由怎么走，信息如何到达你的计算机网卡。</p>
+<p>就像我们通常会更喜欢用 “我要去金茂大厦” 而不是 “我要去上海市浦东新区世纪大道 88 号” 一样，IP 地址并不容易记忆，所以就有了第三层的网络地址：域名。<br>
+比如，我们会用 www.qiniu.com 这个地址来找到七牛云的官网，而不是记住枯燥的 IP 地址。</p>
+</blockquote>
+<ul>
+<li>
+<p>首先是 DNS 协议。<br>
+这个协议就像是个地址簿，主要负责 “域名” =&gt; “IP 地址” 的查询。</p>
+</li>
+<li>
+<p>其次是 DHCP 协议。<br>
+DHCP 全称叫动态主机配置协议（Dynamic Host Configuration Protocol），主要负责计算机接入网络时的初始化。计算机刚开始就只有网卡的 MAC 地址，通过 DHCP 可以给它分配 IP 地址，并得到默认网关地址（这很重要，不知道网关就上不了网）和 DNS 服务器的地址。有了这些东西，这台计算机就可以和外界通讯了。</p>
+</li>
+<li>
+<p>然后是 ARP 协议。<br>
+ARP 全称叫地址解析协议（Address Resolution Protocol），它服务于现在局域网中最流行的以太网协议。在以太网中，ARP 协议负责解析远程主机 IP 地址对应的 MAC 地址。之所以需要 ARP 协议，是因为我们平常应用程序连接目标计算机进行网络通讯时，都是提供了域名或 IP 地址。但对以太网来说，要想发信件出去，它要的是对方的 MAC 地址。</p>
+</li>
+<li>
+<p>然后是 RARP 协议。<br>
+RARP 全称叫反向地址转换协议（Reverse Address Resolution Protocol）。顾名思义，它和 ARP 协议相反，负责的是 MAC 地址到 IP 地址的转换。RARP 协议已经被上面的 DHCP 协议所取代，平常用不太到了。</p>
+</li>
+<li>
+<p>然后是 ICMP 协议。<br>
+ICMP 全称叫互联网控制报文协议（Internet Control Message Protocol），它能够检测网路的连线状况，以保证连线的有效性。基于这个协议实现的常见程序有两个：ping 和 traceroute，它们可以用来判断和定位网络问题。</p>
+</li>
+<li>
+<p>最后是 IGMP 协议。<br>
+IGMP 全称叫互联网组管理协议（Internet Group Management Protocol），它负责 IP 组播（Multicast）成员管理。</p>
+</li>
+</ul>
+<h2 id="数据传输过程">数据传输过程</h2>
+<figure data-type="image" tabindex="3"><img src="https://xxgf.github.io//post-images/1710764948803.webp" alt="" loading="lazy"></figure>
+<p>在需要传输数据的源主机和目标主机之间，它们通过若干路由器或交换机连接。</p>
+<p>我们分以下几种情况来分析：</p>
+<blockquote>
+<p>局域网是指在一个相对较小的地理区域内（如家庭、学校、办公室或者一栋建筑物）的计算机网络。以太网是实现局域网的一种具体技术。</p>
+</blockquote>
+<p><strong>情形一，源主机和目标主机在同一个局域网内，中间通过交换机连接，采用了最常见的以太网协议。</strong></p>
+<ul>
+<li>通讯开始的时候，源主机只有目标主机的 IP 地址，并没有 MAC 地址。但以太网通讯要的是 MAC 地址，所以源主机会发起一个 ARP 请求去获得目标 IP 对应的 MAC 地址。<br>
+当然，源主机会缓存这个对应关系。第二次继续给相同 IP 发信息的时候，就不需要重新发起 ARP 请求了。</li>
+<li>无论是 ARP 请求，还是普通的数据包，都会先到达交换机。ARP 是一个广播请求，所以交换机会转发给所有其他主机，目标主机发现这个 IP 地址是自己的，于是返回自己的 MAC 地址。</li>
+<li>有了目标主机的 MAC 地址，源主机就可以发数据了。同样的，所有数据包都发给了交换机。</li>
+</ul>
+<p>交换机是性能极高的网络数据交换设备。它通常工作在网络协议的第二层，也就是数据链路层。这一层只认 MAC 地址，不认 IP 地址。MAC 地址本身是个唯一身份标识，就像我们的身份证号，并没有可寻址的作用。</p>
+<p><strong>那么交换机怎么做到这么高的数据传输的效率？</strong></p>
+<ul>
+<li>
+<p>收到某端口（设为 A）MAC 地址为 X 的计算机发给 MAC 地址为 Y 的计算机的数据包。交换机从而记下了 MAC 地址 X 在端口 A。这称为学习（learning）。</p>
+</li>
+<li>
+<p>交换机还不知道 MAC 地址 Y 在哪个端口上，于是向除了 A 以外的所有端口转发该数据包。这称为泛洪（flooding）。</p>
+</li>
+<li>
+<p>MAC 地址 Y 的计算机收到该数据包，向 MAC 地址 X 发出确认包。交换机收到该包后，从而记录下 MAC 地址 Y 所在的端口。</p>
+</li>
+<li>
+<p>交换机向 MAC 地址 X 转发确认包。这称为转发（forwarding）。</p>
+</li>
+<li>
+<p>交换机收到一个数据包，查表后发现该数据包的来源地址与目的地址属于同一端口。交换机将不处理该数据包。这称为过滤（filtering）。</p>
+</li>
+<li>
+<p>交换机内部的 “MAC 地址 =&gt; 端口” 查询表的每条记录采用时间戳记录最后一次访问的时间。早于某个阈值（用户可配置）的记录被清除。这称为老化（aging）。</p>
+</li>
+</ul>
+<p><strong>情形二，源主机和目标主机都有公网 IP 地址，它们中间经过若干交换机和路由器相连。</strong></p>
+<p>路由器工作在网络协议的第三层，也就是网络层。网络层看到的是 IP 协议，能够知道数据传输的源 IP 地址和目标 IP 地址。</p>
+<p>路由器有导航（路由）功能，知道哪些目标 IP 地址的数据包应该往哪条路走的。</p>
+<p>路由器要考虑的问题复杂很多，因为涉及 “最佳路由路径” 的问题。</p>
+<p>路由器除了解决路由问题，它往往还要解决异构网络的封包转换问题。</p>
+<ul>
+<li>作为局域网的接入方，它可能走的是固网或 WiFi 网络。</li>
+<li>作为 Internet 的接入方，它可能走的是光纤宽带。<br>
+所以它需要把局域网的数据链路层的封包解开并重组，以适应广域网数据链路协议的需求。</li>
+</ul>
+<ol>
+<li>首先，源主机发送的数据包，经由交换机（可选），到达本局域网的公网网关（路由器）。这个过程属于局域网内通讯，同情形一。</li>
+<li>路由器收到了数据包，发现目标主机是 Internet 上的某个远端的目标主机，于是对数据包进行拆包重组，形成新的数据包。</li>
+<li>循着自身的路由表，把这个新数据包层层转发，最后到达目标主机对应的公网网关（路由器）上。</li>
+<li>路由器发现是发给本局域网内的目标主机，于是再拆包重组，形成新的数据包。</li>
+<li>新数据包转到局域网内，经由交换机（可选），并最终到达目标主机。如此，整个数据传输过程就结束了。</li>
+</ol>
+<p><strong>情形三，源主机和目标主机至少有一方在局域网内且只有私有 IP 地址，它们中间经过若干交换机和路由器相连。</strong></p>
+<ul>
+<li>私有IP地址是在内部网络中使用的地址，例如家庭网络或企业内部网络。</li>
+<li>公共IP地址是在互联网上使用的全局唯一地址。</li>
+</ul>
+<p>私有IP地址：</p>
+<ul>
+<li>10.0.0.0 ~ 10.255.255.255</li>
+<li>172.16.0.0 ~ 172.31.255.255</li>
+<li>192.168.0.0 ~ 192.168.255.25<br>
+这几个 IP 地址区间都是私有 IP 地址，只用于局域网内通讯。</li>
+</ul>
+<p>常规来说，只有私有 IP 而没有公网 IP 的主机只能和局域网内的主机通讯，而无法和 Internet 上的其他主机相互通讯。</p>
+<p><strong>问题：家庭用户往往网络结构是一个 WiFi 路由器连接公网，所有的家庭设备如手机、平板、笔记本，都以 WiFi 路由器为网关构成一个局域网。那么我们的这些设备是怎么上网的呢？</strong></p>
+<blockquote>
+<p>答案是 NAT（Network Address Translation，网络地址转换）技术。<br>
+假设我们现在源主机用的 IP+ 端口为 iAddr:port1，经过 NAT 网关后，NAT 将源主机的 IP 换成自己的公网 IP，比如 eAddr，端口随机分配一个，比如 port2。<br>
+也就是从目标主机看来，这个数据包看起来是来自于 eAddr:port2。然后，目标主机把数据包回复到 eAddr:port2，NAT 网关再把它转发给 iAddr:port1。<br>
+也就是说，NAT 网关临时建立了一个双向的映射表 iAddr:port1 &lt;=&gt; eAddr:port2，一旦完成映射关系的建立，在映射关系删除前，eAddr:port2 就变成了 iAddr:port1 的 “替身”。这样，内网主机也就能够上网了。</p>
+</blockquote>
+<p>NAT 网关并不一定是公网网关（路由器），它可以由局域网内任何一台有公网 IP 的主机担当。但显然如果公网网关担当 NAT 网关，链路的效率会高一点。</p>
+<p><strong>问题：最极端的情形，源主机和目标主机在不同的局域网内，且都没有公网 IP，它们是否可以通讯呢？</strong></p>
+<blockquote>
+<p>在这种情况下，源主机和目标主机没法直接通讯，需要中间人去帮忙搭建通讯的链路。<br>
+找一个有公网 IP 的主机作为中间人服务器，目标主机向它发包，这样，在目标主机的 NAT 网关就形成了一对双向的映射表：iDestAddr:portDest1 &lt;=&gt; eDestAddr:portDest2<br>
+然后，中间人服务器再把 eDestAddr:portDest2 告诉源主机。这样源主机就可以通过向 eDestAddr:portDest2 发送数据包来和目标主机 iDestAddr:portDest1 通讯了。<br>
+不少 P2P 软件就利用了这个技术实现 NAT 穿透，让两台不同内网的计算机相互能够直接通讯。</p>
+</blockquote>
+<p><strong>问题：如果局域网中有多个设备，通过NAT转换之后，访问到目标主机，那目标主机回包，NAT怎么知道发给局域网中的哪个设备？</strong><br>
+当局域网（LAN）中的多个设备通过NAT转换访问外部网络时，NAT设备（通常是路由器）会在其转换表中为每个连接创建一个唯一的映射条目。这个映射条目通常包括以下信息：</p>
+<ul>
+<li>内部设备的私有IP地址</li>
+<li>内部设备使用的源端口号</li>
+<li>被分配的公共IP地址（NAT设备的IP地址）</li>
+<li>NAT设备分配给该连接的新源端口号</li>
+</ul>
+<p>这个过程通常是在使用端口地址转换（PAT），也称为NAT过载的情况下发生的，因为它允许多个内部设备共享同一个公共IP地址，但每个连接都有一个独特的源端口号。</p>
+<p>回包处理过程：</p>
+<ol>
+<li>当目标主机回复数据包时，它会发送到NAT设备的公共IP地址，并使用NAT设备分配的源端口号。</li>
+<li>NAT设备接收到这个数据包后，会查找其NAT转换表，找到与该目标端口号对应的内部私有IP地址和原始源端口号。</li>
+<li>然后，NAT设备会将数据包的目标IP地址和端口号修改为这个内部设备的私有IP地址和端口号，并将数据包转发到局域网中的相应设备。【这里涉及到拆包和重写IP和端口】</li>
+<li>由于每个从内部发起的连接都有一个唯一的源端口号，NAT设备可以通过这个端口号来区分不同的内部设备。即使多个内部设备访问同一个外部目标IP和端口，NAT设备也能通过不同的源端口号来识别并正确地将回复的数据包转发给发起请求的内部设备。</li>
+</ol>
+<p>这就是NAT设备如何管理和维护内部和外部网络之间的通信，确保数据包能够正确地发送和接收。</p>
+<p><strong>问题：既然能通过PAT技术将回包发给具体的局域网主机，那为何P2P（点对点）应用还会存在问题，需要去用NAT穿透技术解决？</strong><br>
+PAT确实能够有效地将外部网络的数据包路由到正确的内部设备，但这种机制依赖于内部设备首先发起连接。在这种情况下，NAT设备知道外部数据包是作为响应发送给哪个内部设备的。<br>
+然而，P2P（点对点）应用通常需要两个位于不同NAT后面的设备直接相互通信，这就引入了一些复杂性。</p>
+<p>P2P应用中的NAT问题：</p>
+<ul>
+<li>双方都在NAT后面：如果两个想要通信的设备都位于各自的NAT后面，那么没有一个设备能够直接发起到对方的连接，因为它们都没有公共IP地址。</li>
+<li>端口预测问题：PAT通过动态分配端口来跟踪内部和外部的连接。当一个内部设备想要接收一个外部的入站连接时，外部设备必须知道要连接的确切公共IP地址和端口号。但是，由于NAT设备通常动态地分配端口，外部设备无法预知这个端口号。</li>
+<li>连接保持：即使在某些情况下，外部设备知道了正确的端口号，NAT设备可能会在没有活动一段时间后关闭端口映射，这会导致连接中断。</li>
+</ul>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#ip%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B">IP网络模型</a>
+<ul>
+<li><a href="#%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE">网络协议</a></li>
+<li><a href="#%E6%95%B0%E6%8D%AE%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B">数据传输过程</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://xxgf.github.io/post/cao-zuo-xi-tong-gai-nian/">
+              <h3 class="post-title">
+                操作系统概念
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: '346dd1e6861a8d5154be',
+    clientSecret: '11fa9ccf79622cb14f892b083428ae40f9f28f13',
+    repo: 'XXGF.github.io',
+    owner: 'XXGF',
+    admin: ['XXGF'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://xxgf.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,280 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>左耳听风（九）：故障处理最佳实践 | Gridea</title>
+<link rel="shortcut icon" href="https://xxgf.github.io//favicon.ico?v=1727422712163">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://xxgf.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="左耳听风（九）：故障处理最佳实践 | Gridea - Atom Feed" href="https://xxgf.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="一、应对故障
+故障恢复
+
+重启和限流：解决可用性问题
+回滚操作：解决新版本代码产生的bug
+降级操作：允许部分非关键服务不可用
+紧急更新：直接解决问题
+
+出现故障时，最重要的不是 debug 故障，而是尽可能地减少故障的影响范围，并尽可能快..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://xxgf.github.io/">
+  <img class="avatar" src="https://xxgf.github.io//images/avatar.png?v=1727422712163" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+      
+        <a href="/note" class="menu">
+          笔记
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              左耳听风（九）：故障处理最佳实践
+            </h2>
+            <div class="post-info">
+              <span>
+                2024-02-19
+              </span>
+              <span>
+                3 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h1 id="一-应对故障">一、应对故障</h1>
+<h2 id="故障恢复">故障恢复</h2>
+<ul>
+<li>重启和限流：解决可用性问题</li>
+<li>回滚操作：解决新版本代码产生的bug</li>
+<li>降级操作：允许部分非关键服务不可用</li>
+<li>紧急更新：直接解决问题</li>
+</ul>
+<p>出现故障时，最重要的不是 debug 故障，而是尽可能地减少故障的影响范围，并尽可能快地修复问题。</p>
+<h2 id="故障前的准备工作">故障前的准备工作</h2>
+<ul>
+<li>以用户功能为索引的服务和资源的全视图。</li>
+<li>为地图中的各个服务制定关键指标，以及一套运维流程和工具，包括应急方案。</li>
+<li>设定故障等级。<br>
+亚马逊一般将故障分为 4 级：<br>
+1 级是全站不可用；<br>
+2 级是某功能不可用，且无替代方案；<br>
+3 级是某功能不可用，但有替代方案；<br>
+4 级是非功能性故障，或是用户不关心的故障。</li>
+<li>故障演练</li>
+<li>灰度发布系统</li>
+</ul>
+<h1 id="二-故障改进">二、故障改进</h1>
+<h2 id="故障复盘">故障复盘</h2>
+<p>故障文档：</p>
+<ul>
+<li>故障处理的过程</li>
+<li>故障原因分析</li>
+<li>Ask 5 Whys：需要反思并反问至少 5 个为什么，并为这些“为什么”找到答案。</li>
+<li>故障后续整改计划：需要针对上述的“Ask 5 Whys”说明后续如何举一反三地从根本上解决所有的问题。</li>
+</ul>
+<h2 id="故障整改方法">故障整改方法</h2>
+<ul>
+<li>第一，优化故障获知和故障定位的时间。<br>
+从故障发生到我们知道的时间是否可以优化得更短？<br>
+定位故障的时间是否可以更短？<br>
+有哪些地方可以做到自动化？</li>
+<li>第二，优化故障的处理方式。<br>
+故障处理时的判断和章法是否科学，是否正确？<br>
+故障处理时的信息是否全透明？<br>
+故障处理时人员是否安排得当？</li>
+<li>第三，优化开发过程中的问题。<br>
+Code Review 和测试中的问题和优化点。<br>
+软件架构和设计是否可以更好？<br>
+对于技术欠债或是相关的隐患问题是否被记录下来，是否有风险计划？</li>
+<li>第四，优化团队能力。<br>
+如何提高团队的技术能力？<br>
+如何让团队有严谨的工程意识？</li>
+</ul>
+<p>解决一个故障可以通过技术和管理两方面的方法。如果你喜欢技术，是个技术范，你就更多地用技术手段；如果你喜欢管理，那么你就会使用更多的管理手段。我是一个技术人员，我更愿意使用技术手段。</p>
+<p>这里给出三条我工作这 20 年总结出来的原则（Principle），供你参考。</p>
+<ol>
+<li>
+<p>举一反三解决当下的故障。为自己赢得更多的时间。</p>
+</li>
+<li>
+<p>简化复杂、不合理的技术架构、流程和组织。你不可能在一个复杂的环境下根本地解决问题。</p>
+</li>
+<li>
+<p>全面改善和优化整个系统，包括组织。解决问题的根本方法是改善和调整整体结构。而只有简单优雅的东西才有被改善和优化的可能。</p>
+</li>
+</ol>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#%E4%B8%80-%E5%BA%94%E5%AF%B9%E6%95%85%E9%9A%9C">一、应对故障</a>
+<ul>
+<li><a href="#%E6%95%85%E9%9A%9C%E6%81%A2%E5%A4%8D">故障恢复</a></li>
+<li><a href="#%E6%95%85%E9%9A%9C%E5%89%8D%E7%9A%84%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C">故障前的准备工作</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BA%8C-%E6%95%85%E9%9A%9C%E6%94%B9%E8%BF%9B">二、故障改进</a>
+<ul>
+<li><a href="#%E6%95%85%E9%9A%9C%E5%A4%8D%E7%9B%98">故障复盘</a></li>
+<li><a href="#%E6%95%85%E9%9A%9C%E6%95%B4%E6%94%B9%E6%96%B9%E6%B3%95">故障整改方法</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://xxgf.github.io/post/zuo-er-ting-feng-ba/">
+              <h3 class="post-title">
+                左耳听风（八）：时间管理
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: '346dd1e6861a8d5154be',
+    clientSecret: '11fa9ccf79622cb14f892b083428ae40f9f28f13',
+    repo: 'XXGF.github.io',
+    owner: 'XXGF',
+    admin: ['XXGF'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://xxgf.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

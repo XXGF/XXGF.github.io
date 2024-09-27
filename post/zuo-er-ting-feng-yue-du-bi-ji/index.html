@@ -1,0 +1,677 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>左耳听风 | Gridea</title>
+<link rel="shortcut icon" href="https://xxgf.github.io//favicon.ico?v=1727422712163">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://xxgf.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="左耳听风 | Gridea - Atom Feed" href="https://xxgf.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="
+左耳听风课程的读书笔记
+
+七、程序中的错误处理
+2、异步编程以及我的最佳实践
+异步编程实践力的错误处理
+在异步编程的世界里，因为被调用的函数是被放到了另外一个线程里运行，这将导致：
+
+
+无法使用返回码。
+因为函数在“被”异步运行中，所谓的..." />
+    <meta name="keywords" content="课程笔记" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://xxgf.github.io/">
+  <img class="avatar" src="https://xxgf.github.io//images/avatar.png?v=1727422712163" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+      
+        <a href="/note" class="menu">
+          笔记
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              左耳听风
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-06-27
+              </span>
+              <span>
+                24 min read
+              </span>
+              
+                <a href="https://xxgf.github.io/tag/0t_fhy82I/" class="post-tag">
+                  # 课程笔记
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <blockquote>
+<p>左耳听风课程的读书笔记</p>
+</blockquote>
+<h1 id="七-程序中的错误处理">七、程序中的错误处理</h1>
+<h2 id="2-异步编程以及我的最佳实践">2、异步编程以及我的最佳实践</h2>
+<h3 id="异步编程实践力的错误处理">异步编程实践力的错误处理</h3>
+<p>在异步编程的世界里，因为被调用的函数是被放到了另外一个线程里运行，这将导致：</p>
+<ul>
+<li>
+<p>无法使用返回码。<br>
+因为函数在“被”异步运行中，所谓的返回只是把处理权交给下一条指令，而不是把函数运行完的结果返回。所以，函数返回的语义完全变了，返回码也没有用了。</p>
+</li>
+<li>
+<p>无法使用抛异常的方式。<br>
+因为除了上述的函数立马返回的原因之外，抛出的异常也在另外一个线程中，不同线程中的栈是完全不一样的，所以主线程的 catch 完全看不到另外一个线程中的异常。</p>
+</li>
+</ul>
+<p>那如何处理异步编程的错误？</p>
+<ol>
+<li>回调函数<br>
+通过注册错误处理的回调函数，让异步执行的函数在出错的时候，调用被注册进来的错误处理函数，这样的方式比较好地解决了程序的错误处理。</li>
+</ol>
+<p><strong>存在问题：</strong><br>
+如果我们需要把几个异步函数顺序执行的话（异步程序中，程序执行的顺序是不可预测的、也是不确定的，而有时候，函数被调用的上下文是有相互依赖的，所以，我们希望它们能按一定的顺序处理），就会出现了所谓的 Callback Hell 的问题。</p>
+<pre><code>doSomething(function(result) {
+  doSomethingElse(result, function(newResult) {
+    doThirdThing(newResult, function(finalResult) {
+      console.log('Got the final result: ' + finalResult);
+    }, failureCallback);
+  }, failureCallback);
+}, failureCallback);
+</code></pre>
+<p>而这样层层嵌套中需要注册的错误处理函数也有可能是完全不一样的，而且会导致代码非常混乱，难以阅读和维护。</p>
+<ol start="2">
+<li>Promise 模式<br>
+这是JavaScript中的东西，先不深究</li>
+</ol>
+<p>在 Java 中，在 JDK 1.8 里也引入了类似 JavaScript 的玩法 —— CompletableFuture。这个类提供了大量的异步编程中 Promise 的各种方式。</p>
+<p>实例：</p>
+<pre><code>String result = CompletableFuture.supplyAsync(() -&gt; {
+         return &quot;hello&quot;;
+     }).thenCombine(CompletableFuture.supplyAsync(() -&gt; {
+         return &quot;world&quot;;
+     }), (s1, s2) -&gt; s1 + &quot; &quot; + s2).join());
+System.out.println(result);
+</code></pre>
+<p>反正就是非常的不好阅读。</p>
+<p>Go语言也有Promise<br>
+在 Go 语言中，如果你想实现一个简单的 Promise 模式，也是可以的，但没必要。<br>
+在 GO 语言中，可以通过channel在不同的协程间传递错误信息。</p>
+<ol start="3">
+<li>pipeline<br>
+这是JavaScript中的东西，先不深究</li>
+</ol>
+<h3 id="错误处理的最佳实践">错误处理的最佳实践</h3>
+<ul>
+<li>统一分类的错误字典。</li>
+<li>同类错误的定义最好是可以拓展的。例如：Go语言的接口多态。</li>
+<li>定义错误的严重程度。</li>
+<li>错误日志的输出最好使用错误码，而不是错误信息。错误码可以是唯一的英文单词，这样人和机器都能理解。</li>
+<li>忽略错误最好有日志。</li>
+<li>对于同一个地方不停的报错，最好不要都打到日志里。可以打印出现次数。</li>
+<li>不要用错误处理逻辑来处理业务逻辑。</li>
+<li>对于同类的错误处理，用一样的模式。</li>
+<li>尽可能在错误发生的地方处理错误。</li>
+<li>向上尽可能地返回原始的错误。</li>
+<li>处理错误时，总是要清理已分配的资源。</li>
+<li>不推荐在循环体里处理错误。</li>
+<li>为你的错误定义提供清楚的文档以及每种错误的代码示例。</li>
+<li>对于异步的方式，推荐使用 Promise 模式处理错误。</li>
+<li>对于分布式的系统，推荐使用 APM 相关的软件。</li>
+</ul>
+<hr>
+<h2 id="1-错误返回码和异常捕捉">1、错误返回码和异常捕捉</h2>
+<h3 id="错误处理">错误处理</h3>
+<p>首先，我们知道，处理错误最直接的方式是通过错误码，这也是传统的方式，在过程式语言中通常都是用这样的方式处理错误的。</p>
+<p>Go语言的多返回值的方式，能把函数的结果和错误分离，是一种很好的处理方式。</p>
+<p>对于资源清理，GO语言有defer关键字，能很好的处理这个事情。</p>
+<p>对于异常捕捉处理，Java的 try - catch - finally 是一种较好的处理方式，但是它有个问题：</p>
+<blockquote>
+<p>try 语句块里的函数运行在另外一个线程中，其中抛出的异常无法在调用者的这个线程中被捕捉。<br>
+这在并发编程中，很容易导致问题。</p>
+</blockquote>
+<p>但 Go 其实也无法直接在一个协程中捕获另一个协程中抛出的异常。recover函数只能在同一个协程内部捕获异常。</p>
+<p><strong>但是通过返回码，可以在不同协程间传递报错信息。</strong></p>
+<blockquote>
+<p>注意：Go语言是通过panic关键字抛出异常，而 返回error，我们这里也理解为是一种返回错误码</p>
+</blockquote>
+<p>在Go语言中，如果你希望在不同的协程中捕获异常，一种常见的做法是使用通道（channel）来传递错误信息。你可以在抛出异常的协程中将错误信息发送到通道，然后在另一个协程中接收并处理该错误。</p>
+<h3 id="错误分类">错误分类</h3>
+<ul>
+<li>
+<p><strong>资源的错误：</strong><br>
+当我们的代码去请求一些资源时导致的错误，比如打开一个没有权限的文件，写文件时出现的写错误，发送文件到网络端发现网络故障的错误，等等。<br>
+这一类错误属于程序运行环境的问题。对于这类错误，有的我们可以处理，有的我们则无法处理。比如，内存耗尽、栈溢出或是一些程序运行时关键性资源不能满足等等这些情况，我们只能停止运行，甚至退出整个程序。</p>
+</li>
+<li>
+<p><strong>程序错误：</strong><br>
+比如：空指针、非法参数等。这类是我们自己程序的错误，我们要记录下来，写入日志，最好触发监控系统报警。</p>
+</li>
+<li>
+<p><strong>用户错误：</strong><br>
+比如：Bad Request、Bad Format 等这类由用户不合法输入带来的错误。这类错误基本上是在用户的 API 层上出现的问题。比如，解析一个 XML 或 JSON 文件，或是用户输入的字段不合法之类的。</p>
+<p>对于这类问题，我们需要向用户端报错，让用户自己处理修正他们的输入或操作。然后，我们正常执行，但是需要做统计，统计相应的错误率，这样有利于我们改善软件或是侦测是否有恶意的用户请求。</p>
+</li>
+</ul>
+<p>所以，是不是我们可以这样来在逻辑上分类：</p>
+<ul>
+<li>对于我们并不期望会发生的事，我们可以使用异常捕捉；例如：程序中的错误。</li>
+<li>对于我们觉得可能会发生的事，使用返回码。例如：用户输入。</li>
+</ul>
+<p>而资源类的错误，要分情况，是用异常捕捉还是用返回值，要看这事是不应该出现的【异常捕获】，还是经常出现的【返回错误码】。</p>
+<p>因为异常捕捉在编程上的好处比函数返回值好很多，所以很多使用异常捕捉的代码会更易读也更健壮一些。而返回码容易被忽略。</p>
+<p>在大多数情况下，我们会混用这两种报错的方式，有时候，我们还会把异常转成错误码（比如 HTTP 的 RESTful API），也会把错误码转成异常（比如对系统调用的错误）。</p>
+<hr>
+<h1 id="六-如何成为一个大家愿意追随的领头人">六、如何成为一个大家愿意追随的领头人</h1>
+<h2 id="leader要做什么">Leader要做什么？</h2>
+<ul>
+<li>和员工一起讨论工作细节，指导员工关注工作的重点，和员工一起规划出（work out）工作的方向和计划，并且在工作中和员工一起解决细节难题，帮助员工完成工作。</li>
+<li>面对错误喜欢寻找解决问题的技术或管理方法。深入技术细节，从技术上找到既治标又治本的技术方案或管理方式。</li>
+<li>Lead by Example，以身作则，用身教而不是言传。</li>
+<li>看到人的潜力和特长，通过授权、指导和给员工制定成长计划让员工成长，从而发展员工。<br>
+Boss 总是说自己的员工有这个问题有那个问题，而 Leader 总是说，如何让员工成长以解决员工个人的各种问题。</li>
+<li>Leader 喜欢通过沟通和协作来增加员工的参与感，从而让员工觉得这是自己的事，愿意为之付出。</li>
+</ul>
+<h2 id="如何成为leader">如何成为Leader</h2>
+<ul>
+<li>帮人解决问题：团队或身边大多数人都在问：“这个问题怎么办？”，而你总是能站出来告诉大家该怎么办。</li>
+<li>被人依赖：团队或身边大多数人在做比较关键的决定时，都会来找你咨询意见和想法。</li>
+<li>一个 Leader 除了有技术领导力还需要有其它的素质和人格魅力。</li>
+</ul>
+<h2 id="除了技术领导力之外的素质">除了技术领导力之外的素质</h2>
+<ul>
+<li>赢得他人的信任</li>
+<li>开放的心态 + 倾向性的价值观【当然，要倾向于好的东西，例如倾向于OKR而不是KPI】</li>
+<li>以身作则，ABC – Always Be Coding</li>
+<li>能够抓住重点，看透事物的本质</li>
+<li>甘当铺路石，为他人创造机会</li>
+<li>保持热情和冲劲，要正向。</li>
+</ul>
+<hr>
+<h1 id="五-三个问题">五、三个问题</h1>
+<h2 id="加班太严重完全没有时间学习怎么办">加班太严重完全没有时间学习，怎么办？</h2>
+<p>保持学习的热情<br>
+合理安排时间</p>
+<h2 id="为什么你能够写出这么多东西">为什么你能够写出这么多东西？</h2>
+<p>从写作中还能训练自己的表达能力，这让我能够更好更漂亮地与别人交流和沟通。</p>
+<ul>
+<li>学习阶段</li>
+<li>利益驱动</li>
+<li>重新思考过去的观点</li>
+<li>与他人交互</li>
+</ul>
+<h2 id="怎样选择自己的人生和职业发展">怎样选择自己的人生和职业发展？</h2>
+<ul>
+<li><strong>一个是在 20-30 岁，这是打基础的阶段。</strong><br>
+在这个阶段，我们要的是开阔眼界，把基础打扎实，努力学习和成长。</li>
+<li><strong>另一个是在 30-40 岁，这是人生发展的阶段。</strong><br>
+因为整个社会一定会把社会的重担交给这群人，30-40 岁的人年富力强，既有经验又有精力，还敢想敢干，所以这群人才是整个社会的中流砥柱。在这个阶段，你需要明确自己奋斗的方向，需要做有挑战的事儿，需要提升自己的技术领导力</li>
+</ul>
+<p>个人建议：</p>
+<ol>
+<li>客观地审视自己。</li>
+<li>确定自己想要什么。</li>
+<li>注重长期的可能性，而不是短期的功利。</li>
+</ol>
+<p>编码能力很重要，但是技术视野、技术洞察力，以及我们如何用技术解决问题的能力更为重要。</p>
+<h1 id="四-go语言docker和新技术">四、Go语言，Docker和新技术</h1>
+<h2 id="一个方面为什么-go-语言和-docker-会是新一代的云计算技术">一个方面，为什么 Go 语言和 Docker 会是新一代的云计算技术。</h2>
+<p>优点：</p>
+<ol>
+<li>语言简单，上手快。</li>
+<li>并行和异步编程几乎无痛点。<br>
+使用 go 关键字就能开启新协程去并发执行代码逻辑，使用channel就能在协程间进行数据传递，达到异步接收结果的目的。</li>
+<li>Go 语言的 lib 库“麻雀虽小，五脏俱全”。</li>
+<li>C 语言的理念和 Python 的姿态。<br>
+C 语言的理念是信任程序员，保持语言的小巧，不屏蔽底层且对底层友好，关注语言的执行效率和性能。而 Python 的姿态是用尽量少的代码完成尽量多的事。于是我能够感觉到，Go 语言是想要把 C 和 Python 统一起来。</li>
+</ol>
+<p>缺点：</p>
+<ol>
+<li>垃圾回收机制。【拓展：GO语言的垃圾回收机制原理和各个版本的优化】</li>
+<li>异常处理</li>
+<li>没有泛型</li>
+</ol>
+<p>一个技术能不能发展起来，关键还要看三点：</p>
+<ul>
+<li>有没有一个比较好的社区：有很多商业机构参与的社区那就更是人气爆棚了</li>
+<li>有没有一个工业化的标准：像 C、C++、Java 这些编程语言都是有标准化组织的。尤其是 Java，它在架构上还搞出了像 J2EE 这样的企业级标准。</li>
+<li>有没有一个或多个杀手级应用：Go 语言的杀手级应用是 Docker 容器</li>
+</ul>
+<p>用这些标尺来衡量一下 Go 语言，我们可以清楚地看到：</p>
+<ul>
+<li>Go 语言容易上手；</li>
+<li>Go 语言解决了并发编程和底层应用开发效率的痛点；</li>
+<li>Go 语言有 Google 这个世界一流的技术公司在后面；</li>
+<li>Go 语言的杀手级应用是 Docker 容器，而容器的生态圈这几年可谓是发展繁荣，也是热点领域。</li>
+</ul>
+<h2 id="另一个方面作为技术人员我们如何识别什么样的新技术会是未来的趋势">另一个方面，作为技术人员，我们如何识别什么样的新技术会是未来的趋势。</h2>
+<h1 id="三-推荐阅读每个程序员都该知道的知识">三、推荐阅读：每个程序员都该知道的知识</h1>
+<h2 id="代码review">代码Review</h2>
+<pre><code>- 强制函数开头写注释：用于描述代码的业务背景或调用流程
+    - 写文档的时候通常会发现自己把事儿干复杂了，应该把代码再简化一下，于是就会回头去改代码。
+- 是否允许reviewer去修改代码：因为有些代码逻辑上可能两个人的观点会不一致
+- 修正认知：不要让人觉得reviewer是在挑刺、被reviewer是在被挑刺。这
+    - 就要求review的评论要写好，评论的内容必须是reviewer认真思考后的结果。
+    - 被reviewer也应该认真对待review的评论
+
+- 无用的代码审查注释的典型示例是与代码格式相关的注释。代码样式和格式应该由自动化工具验证，而不是工程师。
+- Code Review 中，不但要 Review 提交者的代码，还要 Reivew 提交者做过的测试。除了一些单元测试，还有一些可能是手动的测试。提交者最好列出所有测试过的案例。这样可以让 Reviewer 可以做出更多的测试建议，从而提高质量。
+</code></pre>
+<h2 id="编程语言和代码质量的研究报告">编程语言和代码质量的研究报告</h2>
+<ul>
+<li>函数式编程语言的 bug 明显比大多数其它语言要好很多。</li>
+<li>有隐式类型转换的语言明显产生的 bug 数要比强类型的语言要少很多。</li>
+<li>函数式的静态类型的语言要比函数式的动态类型语言的程序出 bug 的可能性要小很多。</li>
+</ul>
+<p>研究人员想搞清楚 bug 的类型是否会和语言有关系。的确如此，bug 的类型和语言是强相关性的。下图是各个语言在不同的 bug 类型的情况。如果你看到的是正数，说明高于平均水平，如果你看到的是负数，则是低于平均水平。<br>
+<img src="https://xxgf.github.io//post-images/1706518549753.png" alt="" loading="lazy"></p>
+<h1 id="二-技术领导力">二、技术领导力</h1>
+<h2 id="何为技术领导力">何为技术领导力？</h2>
+<p>作为一个软件工程师怎样才算是拥有“技术领导力”呢？我个人认为，是有下面的这些特质。</p>
+<ul>
+<li>
+<pre><code>  能够发现问题。能够发现现有方案的问题。
+</code></pre>
+</li>
+<li>
+<pre><code>  能够提供解决问题的思路和方案，并能比较这些方案的优缺点。
+</code></pre>
+</li>
+<li>
+<pre><code>  能够做出正确的技术决定。用什么样的技术、什么解决方案、怎样实现来完成一个项目。
+</code></pre>
+</li>
+<li>
+<pre><code>  能够用更优雅，更简单，更容易的方式来解决问题。
+</code></pre>
+</li>
+<li>
+<pre><code>  能够提高代码或软件的扩展性、重用性和可维护性。
+</code></pre>
+</li>
+<li>
+<pre><code>  能够用正确的方式管理团队。所谓正确的方式，一方面是，让正确的人做正确的事，并发挥每个人的潜力；另一方面是，可以提高团队的生产力和人效，找到最有价值的需求，用最少的成本实现之。并且，可以不断地提高自身和团队的标准。
+</code></pre>
+</li>
+<li>
+<pre><code>  创新能力。能够使用新的方法新的方式解决问题，追逐新的工具和技术。
+</code></pre>
+</li>
+</ul>
+<p>总是在提供解决问题的思路和方案的人才是有技术领导力的人。</p>
+<p>作为一个软件工程师，我们怎么让自己拥有技术领导力呢？总体来说，是四个方面，具体如下：</p>
+<ul>
+<li>
+<pre><code>  扎实的基础技术；
+</code></pre>
+</li>
+<li>
+<pre><code>  非同一般的学习能力；
+</code></pre>
+</li>
+<li>
+<pre><code>  坚持做正确的事；
+</code></pre>
+</li>
+<li>
+<pre><code>  不断得高对自己的要求标准；
+</code></pre>
+</li>
+</ul>
+<h2 id="如何才能拥有技术领导力">如何才能拥有技术领导力？</h2>
+<pre><code>第一，你要吃透基础技术
+</code></pre>
+<p>基础技术是各种上层技术共同的基础。</p>
+<ul>
+<li>
+<p>万丈高楼平地起。一栋楼能盖多高，一座大桥能造多长，重要的是它们的地基。同样对于技术人员来说，基础知识越扎实，走得就会越远。</p>
+</li>
+<li>
+<p>计算机技术太多了，但是仔细分析你会发现，只是表现形式很多，而基础技术并不多。学好基础技术，能让你一通百通，更快地使用各种新技术，从而可以更轻松地与时代同行。</p>
+</li>
+<li>
+<p>很多分布式系统架构，以及高可用、高性能、高并发的解决方案基本都可以在基础技术上找到它们的身影。所以，学习基础技术能让你更好地掌握更高维度的技术。</p>
+</li>
+</ul>
+<h3 id="什么是技术基础">什么是技术基础？</h3>
+<p>基础技术可以分成两部分：编程和系统</p>
+<pre><code>编程部分
+</code></pre>
+<ul>
+<li>
+<p><strong>C语言</strong>：相对于很多其他高级语言来说，C 语言更接近底层。在具备跨平台能力的前提下，它可以比较容易地被人工翻译成相应的汇编代码。它的内存管理更为直接，可以让我们直接和内存地址打交道。学习好 C 语言的好处是能掌握程序的运行情况，并能进行应用程序和操作系统编程（操作系统一般是汇编和 C 语言）。</p>
+</li>
+<li>
+<p><strong>汇编语言</strong>：我们还是需要学习汇编语言的。因为如果你想更深入地了解计算机是怎么运作的，那么你是需要了解汇编语言的。虽然我们几乎不再用汇编语言编程了，但是如果你需要写一些如 lock free 之类高并发的东西，那么了解汇编语言，就能有助于你更好地理解和思考。</p>
+</li>
+<li>
+<p><strong>编程范式</strong>：各种编程语言都有它们各自的编程范式，用于解决各种问题。比如面向对象编程（C++、Java）、泛型编程（C++、Go、C#）、函数式编程（JavaScript、 Python、Lisp、Haskell、Erlang）等。学好编程范式，有助于培养你的抽象思维，同时也可以提高编程效率，提高程序的结构合理性、可读性和可维护性，降低代码的冗余度，进而提高代码的运行效率。</p>
+</li>
+<li>
+<p><strong>算法和数据结构</strong>：算法（及其相应的数据结构）是程序设计的有力支撑。适当地应用算法，可以有效地抽象问题，提高程序的合理性和执行效率。算法是编程中最最重要的东西，也是计算机科学中最重要的基础。</p>
+<p>系统部分</p>
+</li>
+<li>
+<p>计算机系统原理：<br>
+CPU 的体系结构（指令集 [CISC/RISC]、分支预测、缓存结构、总线、DMA、中断、陷阱、多任务、虚拟内存、虚拟化等），内存的原理与性能特点（SRAM、DRAM、DDR-SDRAM 等），磁盘的原理（机械硬盘 [盘面、磁头臂、磁头、启停区、寻道等]、固态硬盘 [页映射、块的合并与回收算法、TRIM 指令等]），GPU 的原理等。<br>
+<strong>学习计算机系统原理的价值在于，除了能够了解计算机的原理之外，你还能举一反三地反推出高维度的分布式架构和高并发高可用的架构设计。</strong><br>
+比如虚拟化内存就和今天云计算中的虚拟化的原理是相通的，计算机总线和分布式架构中的 ESB 也有相通之处，计算机指令调度、并发控制可以让你更好地理解并发编程和程序性能调优……这里，推荐书籍《深入理解计算机系统》</p>
+</li>
+<li>
+<p>操作系统原理和基础：<br>
+进程、进程管理、线程、线程调度、多核的缓存一致性、信号量、物理内存管理、虚拟内存管理、内存分配、文件系统、磁盘管理等。<br>
+学习操作系统的价值在于理解程序是怎样被管理的，操作系统对应用程序提供了怎样的支持，抽象出怎样的编程接口（比如 POSIX/Win32 API），性能特性如何（比如控制合理的上下文切换次数），怎样进行进程间通信（如管道、套接字、内存映射等），以便让不同的软件配合一起运行等。<br>
+要学习操作系统知识，一是要仔细观察和探索当前使用的操作系统，二是要阅读操作系统原理相关的图书，三是要阅读 API 文档（如 man pages 和 MSDN Library），并编写调用操作系统功能的程序。这里推荐三本书《UNIX 环境高级编程》、《UNIX 网络编程》和《Windows 核心编程》。<br>
+<strong>学习操作系统基础原理的好处是，这是所有程序运行的物理世界，无论上层是像 C/C++ 这样编译成机器码的语言，还是像 Java 这样有 JVM 做中间层的语言，再或者像 Python/PHP/Perl/Node.js 这样直接在运行时解释的语言，其在底层都逃离不了操作系统这个物理世界的“物理定律”。</strong></p>
+</li>
+<li>
+<p>网络基础：<br>
+计算机网络是现代计算机不可或缺的一部分。需要了解基本的网络层次结构（ISO/OSI 模型、TCP/IP 协议栈），包括物理层、数据链路层（包含错误重发机制）、网络层（包含路由机制）、传输层（包含连接保持机制）、会话层、表示层、应用层（在 TCP/IP 协议栈里，这三层可以并为一层）。<br>
+比如，底层的 ARP 协议、中间的 TCP/UDP 协议，以及高层的 HTTP 协议。<br>
+<strong>这里推荐书籍《TCP/IP 详解》，学习这些基础的网络协议，可以为我们的高维分布式架构中的一些技术问题提供很多的技术方案。比如 TCP 的滑动窗口限流，完全可以用于分布式服务中的限流方案。</strong></p>
+</li>
+<li>
+<p>数据库原理：<br>
+数据库则更适合保存这种短的数据，而且可以方便地按字段进行查询。现代流行的数据库管理系统有两大类：SQL（基于 B+ 树，强一致性）和 NoSQL（较弱的一致性，较高的存取效率，基于哈希表或其他技术）。<br>
+学习了数据库原理之后便能了解数据库访问性能调优的要点，以及保证并发情况下数据操作原子性的方法。要<strong>学习数据库，你可以阅读各类数据库图书，并多做数据库操作以及数据库编程，多观察分析数据库在运行时的性能。</strong></p>
+</li>
+<li>
+<p>分布式技术架构：<br>
+数据库和应用程序服务器在应对互联网上数以亿计的访问量的时候，需要能进行横向扩展，这样才能提供足够高的性能。为了做到这一点，要学习分布式技术架构，包括负载均衡、DNS 解析、多子域名、无状态应用层、缓存层、数据库分片、容错和恢复机制、Paxos、Map/Reduce 操作、分布式 SQL 数据库一致性（以 Google Cloud Spanner 为代表）等知识点。<br>
+<strong>学习分布式技术架构的有效途径是参与到分布式项目的开发中去，并阅读相关论文。</strong></p>
+</li>
+</ul>
+<p>注意，上面这些基础知识通常不是可以速成的。虽然说，你可以在一两年内看完相关的书籍或论文，但是，我想说的是，这些基础技术是需要你用一生的时间来学习的，因为基础上的技术和知识，会随着阅历和经验的增加而有不同的感悟。</p>
+<blockquote>
+<p>分块学习，注意反馈。用到再学，学以致用。</p>
+</blockquote>
+<pre><code>第二，提升学习能力
+</code></pre>
+<p>所谓学习能力，就是能够很快地学习新技术，又能在关键技术上深入的能力。只有在掌握了上述的基础原理之上，你才能拥有好的学习能力。</p>
+<ul>
+<li>
+<p>学习的信息源：常见的信息源有 Google 等搜索引擎，Stack Overflow、Quora 等社区，图书，API 文档，论文和博客等</p>
+</li>
+<li>
+<p>与高手交流：程序员可以通过技术社区以及参加技术会议与高手交流，也可以通过参加开源项目来和高手切磋。</p>
+</li>
+<li>
+<p>举一反三的思考：比如，了解了操作系统的缓存和网页缓存以后，你要思考其相同点和不同点。了解了 C++ 语言的面向对象特性以后，思考 Java 面向对象的相同点和不同点。遇到故障的时候，举一反三，把同类问题一次性地处理掉。</p>
+</li>
+<li>
+<p>不怕困难的态度：如果你能够不怕困难，并可以找到解决困难的方法和路径，时间一长，你就能拥有别人所不能拥有的能力。</p>
+</li>
+<li>
+<p>开放的心态：实现一个目的通常有多种办法。带有开放的心态，不拘泥于一个平台、一种语言，往往能带来更多思考，也能得到更好的结果。</p>
+<p>第三，坚持做正确的事</p>
+</li>
+<li>
+<p>提高效率的事</p>
+</li>
+<li>
+<p>自动化的事</p>
+</li>
+<li>
+<p>掌握前沿技术的事</p>
+</li>
+<li>
+<p>知识密集型的事</p>
+</li>
+<li>
+<p>技术驱动的事</p>
+<p>第四，高标准要求自己</p>
+</li>
+<li>
+<p>Google 的自我评分卡</p>
+</li>
+<li>
+<p>敏锐的技术嗅觉</p>
+</li>
+<li>
+<p>强调实践，学以致用</p>
+</li>
+<li>
+<p>Lead by Example：永远在编程。不写代码，你就对技术细节不敏感，你无法做出可以实践的技术决策和方案。</p>
+</li>
+</ul>
+<h1 id="一-程序员如何用技术变现">一、程序员如何用技术变现</h1>
+<p>这一章节设计到的文章提到的很重要的一个点，就是：</p>
+<ul>
+<li>日常的工作内容往往没有技术含量</li>
+<li>提供日常工作内容的交付效率，节省自己的时间</li>
+<li>将节省的时间用于研究更有价值、更为核心的技术<br>
+总之，我利用公司的资源提升自己的技术能力，工作内容只是附带的东西，公司为我服务。</li>
+</ul>
+<p>技术变现的本质是付费，目前来说，技术付费对我来说还是比较遥远，但是其中提到的提升技术影响力是需要的。<br>
+目前虚线带人，如何提升自己的领导地位，技术影响力就是一个很好的手段，只要你能解决其他组员解决不了的问题，自然就成为领导者。</p>
+<p>要时刻关注市场的需求和技术趋势，否则必然会被淘汰。</p>
+<p>技术的付费点：</p>
+<ul>
+<li>能帮别人挣钱的地方</li>
+<li>能帮别人省钱的地方</li>
+</ul>
+<p>一个号的职业规划：</p>
+<ul>
+<li>先到大公司学习技术规范和能力</li>
+<li>再到高速发展的公司体现自己的价值</li>
+<li>大公司稳定的业务不能体现自己的价值、初创的公司前期专注于业务拓展也不能提现自己的价值</li>
+</ul>
+<p>提升自己的经历和能力，包括英语能力，有能力才会被信任，被信任才愿意付费。</p>
+<p>找到有价值的信息源，朋友圈很重要。</p>
+<p>—————————————————————————————————————————————</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#%E4%B8%83-%E7%A8%8B%E5%BA%8F%E4%B8%AD%E7%9A%84%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86">七、程序中的错误处理</a>
+<ul>
+<li><a href="#2-%E5%BC%82%E6%AD%A5%E7%BC%96%E7%A8%8B%E4%BB%A5%E5%8F%8A%E6%88%91%E7%9A%84%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5">2、异步编程以及我的最佳实践</a>
+<ul>
+<li><a href="#%E5%BC%82%E6%AD%A5%E7%BC%96%E7%A8%8B%E5%AE%9E%E8%B7%B5%E5%8A%9B%E7%9A%84%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86">异步编程实践力的错误处理</a></li>
+<li><a href="#%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86%E7%9A%84%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5">错误处理的最佳实践</a></li>
+</ul>
+</li>
+<li><a href="#1-%E9%94%99%E8%AF%AF%E8%BF%94%E5%9B%9E%E7%A0%81%E5%92%8C%E5%BC%82%E5%B8%B8%E6%8D%95%E6%8D%89">1、错误返回码和异常捕捉</a>
+<ul>
+<li><a href="#%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86">错误处理</a></li>
+<li><a href="#%E9%94%99%E8%AF%AF%E5%88%86%E7%B1%BB">错误分类</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E5%85%AD-%E5%A6%82%E4%BD%95%E6%88%90%E4%B8%BA%E4%B8%80%E4%B8%AA%E5%A4%A7%E5%AE%B6%E6%84%BF%E6%84%8F%E8%BF%BD%E9%9A%8F%E7%9A%84%E9%A2%86%E5%A4%B4%E4%BA%BA">六、如何成为一个大家愿意追随的领头人</a>
+<ul>
+<li><a href="#leader%E8%A6%81%E5%81%9A%E4%BB%80%E4%B9%88">Leader要做什么？</a></li>
+<li><a href="#%E5%A6%82%E4%BD%95%E6%88%90%E4%B8%BAleader">如何成为Leader</a></li>
+<li><a href="#%E9%99%A4%E4%BA%86%E6%8A%80%E6%9C%AF%E9%A2%86%E5%AF%BC%E5%8A%9B%E4%B9%8B%E5%A4%96%E7%9A%84%E7%B4%A0%E8%B4%A8">除了技术领导力之外的素质</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BA%94-%E4%B8%89%E4%B8%AA%E9%97%AE%E9%A2%98">五、三个问题</a>
+<ul>
+<li><a href="#%E5%8A%A0%E7%8F%AD%E5%A4%AA%E4%B8%A5%E9%87%8D%E5%AE%8C%E5%85%A8%E6%B2%A1%E6%9C%89%E6%97%B6%E9%97%B4%E5%AD%A6%E4%B9%A0%E6%80%8E%E4%B9%88%E5%8A%9E">加班太严重完全没有时间学习，怎么办？</a></li>
+<li><a href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%A0%E8%83%BD%E5%A4%9F%E5%86%99%E5%87%BA%E8%BF%99%E4%B9%88%E5%A4%9A%E4%B8%9C%E8%A5%BF">为什么你能够写出这么多东西？</a></li>
+<li><a href="#%E6%80%8E%E6%A0%B7%E9%80%89%E6%8B%A9%E8%87%AA%E5%B7%B1%E7%9A%84%E4%BA%BA%E7%94%9F%E5%92%8C%E8%81%8C%E4%B8%9A%E5%8F%91%E5%B1%95">怎样选择自己的人生和职业发展？</a></li>
+</ul>
+</li>
+<li><a href="#%E5%9B%9B-go%E8%AF%AD%E8%A8%80docker%E5%92%8C%E6%96%B0%E6%8A%80%E6%9C%AF">四、Go语言，Docker和新技术</a>
+<ul>
+<li><a href="#%E4%B8%80%E4%B8%AA%E6%96%B9%E9%9D%A2%E4%B8%BA%E4%BB%80%E4%B9%88-go-%E8%AF%AD%E8%A8%80%E5%92%8C-docker-%E4%BC%9A%E6%98%AF%E6%96%B0%E4%B8%80%E4%BB%A3%E7%9A%84%E4%BA%91%E8%AE%A1%E7%AE%97%E6%8A%80%E6%9C%AF">一个方面，为什么 Go 语言和 Docker 会是新一代的云计算技术。</a></li>
+<li><a href="#%E5%8F%A6%E4%B8%80%E4%B8%AA%E6%96%B9%E9%9D%A2%E4%BD%9C%E4%B8%BA%E6%8A%80%E6%9C%AF%E4%BA%BA%E5%91%98%E6%88%91%E4%BB%AC%E5%A6%82%E4%BD%95%E8%AF%86%E5%88%AB%E4%BB%80%E4%B9%88%E6%A0%B7%E7%9A%84%E6%96%B0%E6%8A%80%E6%9C%AF%E4%BC%9A%E6%98%AF%E6%9C%AA%E6%9D%A5%E7%9A%84%E8%B6%8B%E5%8A%BF">另一个方面，作为技术人员，我们如何识别什么样的新技术会是未来的趋势。</a></li>
+</ul>
+</li>
+<li><a href="#%E4%B8%89-%E6%8E%A8%E8%8D%90%E9%98%85%E8%AF%BB%E6%AF%8F%E4%B8%AA%E7%A8%8B%E5%BA%8F%E5%91%98%E9%83%BD%E8%AF%A5%E7%9F%A5%E9%81%93%E7%9A%84%E7%9F%A5%E8%AF%86">三、推荐阅读：每个程序员都该知道的知识</a>
+<ul>
+<li><a href="#%E4%BB%A3%E7%A0%81review">代码Review</a></li>
+<li><a href="#%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E5%92%8C%E4%BB%A3%E7%A0%81%E8%B4%A8%E9%87%8F%E7%9A%84%E7%A0%94%E7%A9%B6%E6%8A%A5%E5%91%8A">编程语言和代码质量的研究报告</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BA%8C-%E6%8A%80%E6%9C%AF%E9%A2%86%E5%AF%BC%E5%8A%9B">二、技术领导力</a>
+<ul>
+<li><a href="#%E4%BD%95%E4%B8%BA%E6%8A%80%E6%9C%AF%E9%A2%86%E5%AF%BC%E5%8A%9B">何为技术领导力？</a></li>
+<li><a href="#%E5%A6%82%E4%BD%95%E6%89%8D%E8%83%BD%E6%8B%A5%E6%9C%89%E6%8A%80%E6%9C%AF%E9%A2%86%E5%AF%BC%E5%8A%9B">如何才能拥有技术领导力？</a>
+<ul>
+<li><a href="#%E4%BB%80%E4%B9%88%E6%98%AF%E6%8A%80%E6%9C%AF%E5%9F%BA%E7%A1%80">什么是技术基础？</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E4%B8%80-%E7%A8%8B%E5%BA%8F%E5%91%98%E5%A6%82%E4%BD%95%E7%94%A8%E6%8A%80%E6%9C%AF%E5%8F%98%E7%8E%B0">一、程序员如何用技术变现</a></li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://xxgf.github.io/post/xu-shi-wei-de-jia-gou-ke/">
+              <h3 class="post-title">
+                许式伟的架构课
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: '346dd1e6861a8d5154be',
+    clientSecret: '11fa9ccf79622cb14f892b083428ae40f9f28f13',
+    repo: 'XXGF.github.io',
+    owner: 'XXGF',
+    admin: ['XXGF'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://xxgf.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

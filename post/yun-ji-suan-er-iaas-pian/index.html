@@ -1,0 +1,405 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>云计算（二）：IaaS篇 | Gridea</title>
+<link rel="shortcut icon" href="https://xxgf.github.io//favicon.ico?v=1727422712163">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://xxgf.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="云计算（二）：IaaS篇 | Gridea - Atom Feed" href="https://xxgf.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="IaaS 的本质，是对云数据中心和各类 IT 基础设施的抽象，是基于软件技术对物理硬件进行
+的封装和虚拟。
+区域和可用区
+区域
+云计算中最顶层的概念，就是区域（Region）了。
+绝大多数的云服务，都会按区域进行部署和落地；用户使用的所有云..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://xxgf.github.io/">
+  <img class="avatar" src="https://xxgf.github.io//images/avatar.png?v=1727422712163" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+      
+        <a href="/note" class="menu">
+          笔记
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              云计算（二）：IaaS篇
+            </h2>
+            <div class="post-info">
+              <span>
+                2024-03-06
+              </span>
+              <span>
+                16 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p>IaaS 的本质，是对云数据中心和各类 IT 基础设施的抽象，是基于软件技术对物理硬件进行<br>
+的封装和虚拟。</p>
+<h1 id="区域和可用区">区域和可用区</h1>
+<h2 id="区域">区域</h2>
+<p>云计算中最顶层的概念，就是区域（Region）了。</p>
+<p>绝大多数的云服务，都会按区域进行部署和落地；用户使用的所有云资源，也都会隶属于一个区域，这通常是在创建资源时就确定了的。</p>
+<p><strong>举个例子：</strong><br>
+常见的区域，我们一般以国家或地区命名，也经常辅以城市和序号予以区分。比如，阿里云的华北 1 区（青岛）、华北 2 区（北京），以及 AWS 的美国西部 1 区（加利福尼亚北部）、美国西部 2 区（俄勒冈州）等。</p>
+<h3 id="多区域架构">多区域架构</h3>
+<p>背景：<br>
+部分关键应用，为了追求最佳的用户体验和高可用性，需要把多个区域的资源和能力结合起来进行构建。</p>
+<p>实现：<br>
+主流云厂商在跨区域方面做了以下工作：</p>
+<ul>
+<li>物理层面：各区域之间建设有网络互联专线，一般称为骨干网（Backbone）。骨干网的存在使得同一个云在不同区域间的通信，能够有较高的带宽和较低的延时。</li>
+<li>软件层面：允许位于不同区域的虚拟网络跨区域进行互联，使得多区域的私有内网能够借助自有骨干网无缝高速打通。</li>
+<li>DNS解析层面：通常会提供就近解析和智能路由能力，将分布广泛的 C 端流量引流到最近的数据中心，以获得最快的响应速度。</li>
+</ul>
+<p>结论：<br>
+在骨干网的加持下，通过合理架构完全可以让多个区域的云服务融为一体。借助云的力量，小厂也能轻松拥有巨头的分布式部署能力。<br>
+此外，在应用架构层面，我们要让不同区域担任不同的角色，联动起来达到业务目的。例如：我们可以将面向消费者服务的触点部署到多个区域，就近服务各地区的互联网流量，而偏后台的数据分析和 BI 服务，则可以安置在性价比较高的非一线城市区域，业务数据可通过骨干网不断回传。</p>
+<h2 id="可用区">可用区</h2>
+<p>可用区是区域的下级概念，是指一个具备完整而独立的电力供应、冷却系统、网络设施的数据中心单元。一个区域通常由多个可用区高速互联组成。</p>
+<p>物理上的“数据中心”和“机房”概念，若要严谨地对应到云端，其实是在可用区这个层面。</p>
+<p>为何要设置多个可用区？</p>
+<ul>
+<li>故障隔离<br>
+为了避免单个数据中心故障让整个区域不可用，那自然就有必要建设多个相对独立的数据中心，也就是多个可用区了。</li>
+<li>区域可拓展性<br>
+区域可以通过新建可用区，不断扩展自身容量。而老旧的可用区，则可不对新用户开放，逐步封存甚至淘汰，这让区域形成了良好的新陈代。</li>
+</ul>
+<h1 id="云虚拟机一什么是云虚拟机">云虚拟机（一）：什么是云虚拟机？</h1>
+<p>传统的物理服务器上通过安装虚拟化软件，就可以虚拟出多个互相隔离的虚拟机，来帮助我们提高资源的使用效率。云计算中的虚拟机，本质上也是如此，也是底层计算存储能力的抽象和开放。</p>
+<p>云虚拟机的体系结构，用一句话来概括一下，就是全面解耦的计算存储分离的设计思想。</p>
+<p>传统的虚拟化，往往是对单一物理机器资源的纵向切割，计算、存储、网络等各方面的能力都是一台物理机的子集。因此，从可伸缩性的角度来说，传统虚拟机存在较大的局限，当物理机的局部出现故障时，也很容易影响到里面的虚拟机。</p>
+<p>得益于云端大规模的专属硬件以及高速的内部网络，云虚拟机的组成则有所不同。除了核心的 CPU 与内存部分仍属于一台宿主机外，它的网络、硬盘等其他部分，则可以超脱于宿主机之外，享受云端其他基础设施的能力。大致架构如下图所示：<br>
+<img src="https://xxgf.github.io//post-images/1709726392758.jpeg" alt="" loading="lazy"></p>
+<h2 id="网络安全组network-securitygroup-简称-nsg">网络安全组（Network SecurityGroup, 简称 NSG）</h2>
+<p>你可以把网络安全组理解为一层覆盖在虚拟机之外的网络防火墙。它能够控制虚拟机入站、出站的流量，并能根据协议、端口、流向等所设定的规则，来决定是否允许流量通过。</p>
+<p>所以某种程度上，网络安全组和操作系统中我们熟知的防火墙（如 Linux 的 iptables 和Windows 防火墙）一样，都起到网络安全防护的作用。</p>
+<p>区别：<br>
+网络安全组并不工作在操作系统层面，而是在操作系统层之外，是额外的一层防护。非法流量在尚未到达 OS 的网络堆栈之前，就已经被它阻断了。所以 NSG 的一个优点在于，它不会影响 VM 的性能。</p>
+<h1 id="云虚拟机二虚拟机的规格">云虚拟机（二）：虚拟机的规格？</h1>
+<h2 id="虚拟机的类别">虚拟机的类别</h2>
+<ul>
+<li>通用均衡型的比例通常是 1:4，例如 2 核 8G 的搭配</li>
+<li>计算密集型的比例通常是 1:2，甚至 1:1</li>
+<li>内存优化型的比例通常是 1:8，例如 8 核 64G 的搭配</li>
+<li>图形计算型很好理解，就是带有 GPU 能力的虚拟机</li>
+</ul>
+<p>在主流云计算平台上，常常使用字母缩写来表达虚拟机系列。<br>
+<img src="https://xxgf.github.io//post-images/1709782572415.jpeg" alt="" loading="lazy"></p>
+<h2 id="虚拟机的代别">虚拟机的代别</h2>
+<p>正是由于虚拟机所采用的物理 CPU 在不断更新，所以云上虚拟机的单核性能未必相同。</p>
+<h2 id="虚拟机的实例大小">虚拟机的实例大小</h2>
+<p>在描述实例大小时，业界常常使用 medium、large、xlarge 等字眼来进行命名区分。</p>
+<ul>
+<li>标准 large 对应的是 2vCPU 的配备</li>
+<li>xlarge 则代表 4 个vCPU，</li>
+<li>更高的配置一般用 nxlarge 来表达，其中 n 与 xlarge 代表的 4vCPU 是乘法关系。比如 8xlarge  就说明这是一台 8*4=32vCPU 的机器。</li>
+</ul>
+<h2 id="虚拟机的命名规则">虚拟机的命名规则</h2>
+<p>经过前面的介绍，我们已经了解了决定虚拟机配置的最重要的三个要素，即类型、代别和实例大小。</p>
+<h3 id="亚马逊云">亚马逊云</h3>
+<p>这样，一个完整的虚拟机型号命名就已经呼之欲出了。我们来看最具代表性的AWS 命名规则（阿里云采用的也是非常类似的格式）：<br>
+[类别][代别][后缀(可选)].[规格]</p>
+<p>举个例子：<br>
+对于 r5.4xlarge 这个型号，我们会很快想到，这首先是一个 R 类型【内存优化类型】的第 5 代的机器，它应该有 4×4=16 个 vCPU，内存大小则是 16×8=128G（内存型机器的 CPU内存比一般为 1:8）。</p>
+<h3 id="微软云">微软云</h3>
+<p>当然，并非所有的云都一定是采用类似 AWS 的命名规则，像是微软 Azure，就用了一个略有不同的命名体系，大致可以总结为：<br>
+[类型][规则(数字表达)]v[代别]</p>
+<p>举个例子：<br>
+如“E4 v3”，就代表了微软 Azure 上的 E 类型【内存优化型】 4 核 32G（内存型机器的 CPU内存比一般为 1:8） 的第三代机器。</p>
+<p>在前面的命名公式中，还有一个我们称之为“后缀”的可选部分，在许多的型号命名中都能看到它。</p>
+<p>比如，AMD 现在凭借 EPYC 霄龙芯片，也开始在服务器硬件市场攻城拔寨，许多云厂商就专门推出了使用 AMD CPU 的云虚拟机，这些虚拟机往往会使用字母 a 作为后缀。AWS上的  m5a.xlarge 型号，就是使用 AMD EPYC 7000 系列服务器 CPU 构建的通用型虚拟机。</p>
+<h1 id="云硬盘">云硬盘</h1>
+<p>云硬盘，又叫做“云盘”或者“云磁盘”，就是云虚拟机上可以挂载和使用的硬盘。这里，它既包含了用于承载操作系统的系统盘，也包括了承载数据的数据盘。</p>
+<p>在云计算的领域，有时，我们还会把云端磁盘服务叫做块存储（Block Storage），因为它们与 Linux 操作系统中的块设备相对应，是云上提供的“裸盘”，可以格式化并且施加文件系统。</p>
+<p>云厂商对于云盘，不仅仅会保障数据的顺利写入，一般还会帮你在存储端同步和保留至少三份副本的数据。</p>
+<p>云硬盘与传统磁盘的真正差异在于，绝大多数的云硬盘都是远程的。在云端，你的硬盘则很可能并不在宿主机上，而是在专用的磁盘服务器阵列中，两者是通过数据中心内部的特有 IO 线路进行连接。</p>
+<h2 id="性能">性能</h2>
+<p>在现代云计算中，已经发展出了基于不同存储介质的、丰富的性能等级选择，你已经能够找到单盘 IOPS 在数十万量级甚至达到百万的云硬盘产品了。</p>
+<ul>
+<li>第一个等级的云硬盘，是基于传统 HDD 硬盘构建而成的。这类云盘的性能一般，最高<strong>IOPS 大概在数百左右</strong>。</li>
+<li>第二个等级，往往是基于混合硬盘，也就是结合 HDD 和 SSD 硬盘构建的云硬盘。在这个等级下，典型的** IOPS 为数千左右**，是很多云上创建硬盘的默认选项。</li>
+<li>第三个等级的云硬盘，它的存储介质就是纯 SSD 硬盘了。这个等级下的云硬盘能够提供非常稳定的 IO 能力，<strong>IOPS 通常能够上万</strong>。</li>
+<li>第四个等级，也是当下业界的最高等级，就是进一步优化增强的最新 SSD 云盘。采用更新一代的企业级闪存硬件，配合自研或改进后的底层传输协议，和虚拟化技术栈的优化来提供服务。这类 SSD 云盘的 <strong>IOPS 通常能够突破十万以上</strong>。</li>
+</ul>
+<h2 id="实战">实战</h2>
+<p>可以先用 lsblk 和 df 命令查看一下磁盘的情况</p>
+<p>然后，我们可以使用 fio 工具来测试一下这块系统盘的性能表现</p>
+<h1 id="云上虚拟网络">云上虚拟网络</h1>
+<h2 id="虚拟私有网络">虚拟私有网络</h2>
+<p>虚拟私有网络（Virtual Private Cloud，简称 VPC），是指构建在云上的、相互隔离的、用户可以自主控制的私有网络环境。虚拟私有网络有时也称为专有网络（阿里云）或虚拟网络（Virtual Network 或 VNet，Azure 的叫法）。</p>
+<p>私有网络就是一张属于你自己的内网。内网之内的服务器和设备，可以比较自由地互相通信，与外界默认是隔离的。如果外部互联网，或者其他虚拟网络需要连接，则需要额外的配置。</p>
+<h2 id="弹性ip">弹性IP</h2>
+<blockquote>
+<p>在绝大多数的云上，创建虚拟机时都会有一个选项，问你“是否同时为虚拟机分配一个公网IP 地址”。如果你选择“是”，这样机器启动后，就会拥有一个自动分配的公网地址，便于你从自己的电脑连接到这个实例。</p>
+</blockquote>
+<blockquote>
+<p>对于生产环境，我的推荐是，尽量不要使用和依赖这个自动生成的公有 IP。因为它本质上是一个从公有云的 IP 池中临时租用给你的 IP。如果你的机器关闭或重启，下次获得的 IP可能就完全不同了。</p>
+</blockquote>
+<p>弹性 IP 一旦生成，它所对应的 IP 是固定、不会变化的，而且完全属于你所有。</p>
+<p>所谓的弹性，其实是指可以非常自由地解绑和再次绑定到任意目标。你本质上是买下了这个 IP 的所有权，将这个 IP 赋予谁，是你的权利，而且你还可以动态按需切换。</p>
+<p>当你有一个域名，需要让 DNS 服务解析到某个外部 IP，你就应该建立一个弹性IP，绑定到相关资源后，让域名解析到这个弹性 IP，而不应该使用虚拟机自动匹配的公有IP。因为后者是不稳定的。</p>
+<h2 id="如何在-vpc-上开口子">如何在 VPC 上“开口子”</h2>
+<p>我们希望内网的机器和外界并不完全隔离，一些互联网流量需要有序地引进来，一些内网机器也需要访问外网。</p>
+<p>你可以使用前面提到的弹性 IP，绑定到相关虚拟机上。不过，如果我们需要访问外网的虚拟机数量有很多，这种办法就需要很多弹性 IP，管理上就太麻烦了。</p>
+<p>这就是网关可以大显身手的场景了，它正是用来统一协调管理私有网络与外部通信的组件。</p>
+<p>我们这里讨论一个常见的场景，即如何允许多台没有公有 IP 的虚拟机访问外网。这时需要使用到的**网关叫做 NAT（Network Address Translation）**网关，是一种常见的用来给VPC 开口的手段。</p>
+<h2 id="多网连接有哪些方式">多网连接有哪些方式？</h2>
+<p>这里你需要注意对等连接的一个特点，就是它不具备传递性。也就是说，如果 A 和 B 建立了对等连接，B 和 C 建立了对等连接，那么 A 和 C 是不相通的。这是对等连接的一个局限。</p>
+<p>如果你真的需要多个 VPC 间任意路径的互联互通，那么可以考虑使用比对等连接更为复杂和强大的专用网络设施，比如 AWS 的 Transit Gateway，和阿里云的云企业网。</p>
+<ul>
+<li>能够帮助搭建更为复杂的多 VPC 网络拓扑结构</li>
+<li>许进行更精细的路由设置</li>
+</ul>
+<p>公有云中的私有网络，还可以和企业本地数据中心进行互联，形成混合云架构。</p>
+<h1 id="云端架构">云端架构</h1>
+<h2 id="故障">故障</h2>
+<p>云上可能出现哪些不同层面的故障？相应的故障范围和应对措施又会是怎样的呢？</p>
+<p><strong>第一种故障是在宿主机的级别，这也是从概率上来说最常见的一种故障。</strong></p>
+<p>我们需要保证多个虚拟机不在同一台宿主机上，甚至不处于同一个机架上，以免这些虚拟机一起受到局部事故的影响。</p>
+<p>公有云上是有办法来对虚拟机的物理分配施加干预，让它们实现分散分布，隔开一段距离的。这一特性</p>
+<ul>
+<li>在 AWS 称为置放群组（Placement Group）</li>
+<li>Azure 称为可用性集（Availability Set）</li>
+<li>阿里云对应的服务则是部署集</li>
+</ul>
+<p>比如说，我们对阿里云同一个可用区内的虚拟机，在创建时选择同一个部署集，就可以保证相当程度的物理分散部署，从而最大限度地保证它们不同时出现故障了。</p>
+<p><strong>第二种规模更大的故障，是在数据中心，也就是可用区的层面。</strong></p>
+<blockquote>
+<p>比如火灾、雷击等意外，就可能会导致数据中心级别的全部或者部分服务类型的停摆。有时一些施工导致的物理破坏，也会挖断光纤，影响可用区的骨干网络。</p>
+</blockquote>
+<p>要应对这类故障，我们就需要多<strong>可用区的实例部署</strong>，这也是云抽象出可用区概念的意义所在。你的实例需要分散在多个可用区中，这样，可用区之间既可以互为主备，也可以同时对外服务，分担压力。</p>
+<p><strong>第三种更严重的故障，就是整个区域级别的事故了。</strong></p>
+<blockquote>
+<p>当然这种一般非常少见，只有地震等不可抗力因素，或者人为过失引发出的一系列连锁反应，才有可能造成这么大的影响。</p>
+</blockquote>
+<p>这时能够进行补救的，主要看多区域架构层面是否有相关的预案。如果是互联网类的服务，这时最佳的做法，就是在 DNS 层面进行导流，把域名解析到另外的一个区域的备用服务上，底层的数据则需要我们日常进行着跨区域的实时同步。</p>
+<h2 id="弹性伸缩">弹性伸缩</h2>
+<p>弹性伸缩既可以提高工作负载洪峰来临时的吞吐和消化能力，提高业务稳定性，又能够在低谷期帮我们显著地节约成本。</p>
+<p>在 IaaS 端，能够弹性伸缩的最实用的产品形态，莫过于虚拟机编组了，也就是功能相同的多个虚拟机的集合。把它们作为一个单位来创建、管理和伸缩，是一种普遍应用的最佳实践。</p>
+<ul>
+<li>AWS 中相关的产品命名是 EC2 自动伸缩（Auto Scaling），</li>
+<li>Azure 中是虚拟机规模集（VM Scale Set），</li>
+<li>阿里云则叫做弹性伸缩。</li>
+</ul>
+<p>弹性伸缩服务，会帮我们动态地创建和销毁虚拟机实例，自动根据我们指定的数量和扩缩容规则，来协调虚拟机的生命周期。</p>
+<p>弹性伸缩服务，在云端还有一个最佳拍档，就是负载均衡器。当负载增大、虚拟机增加时，负载均衡也能够自动动态识别，将流量分发到新创建的虚拟机上。</p>
+<h1 id="云上运维">云上运维</h1>
+<p>云端基础设施的存在，可以让运维从偏硬件服务器、偏物理机房的日常繁琐工作中解脱出来，更多地基于云<br>
+在软件的层面，进行部署、监控、调整。而云上的高质量、高可用的服务，也能避免我们重复建设，不用自己造轮子，也大大减轻了运维负担。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#%E5%8C%BA%E5%9F%9F%E5%92%8C%E5%8F%AF%E7%94%A8%E5%8C%BA">区域和可用区</a>
+<ul>
+<li><a href="#%E5%8C%BA%E5%9F%9F">区域</a>
+<ul>
+<li><a href="#%E5%A4%9A%E5%8C%BA%E5%9F%9F%E6%9E%B6%E6%9E%84">多区域架构</a></li>
+</ul>
+</li>
+<li><a href="#%E5%8F%AF%E7%94%A8%E5%8C%BA">可用区</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BA%91%E8%99%9A%E6%8B%9F%E6%9C%BA%E4%B8%80%E4%BB%80%E4%B9%88%E6%98%AF%E4%BA%91%E8%99%9A%E6%8B%9F%E6%9C%BA">云虚拟机（一）：什么是云虚拟机？</a>
+<ul>
+<li><a href="#%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E7%BB%84network-securitygroup-%E7%AE%80%E7%A7%B0-nsg">网络安全组（Network SecurityGroup, 简称 NSG）</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BA%91%E8%99%9A%E6%8B%9F%E6%9C%BA%E4%BA%8C%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E8%A7%84%E6%A0%BC">云虚拟机（二）：虚拟机的规格？</a>
+<ul>
+<li><a href="#%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E7%B1%BB%E5%88%AB">虚拟机的类别</a></li>
+<li><a href="#%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E4%BB%A3%E5%88%AB">虚拟机的代别</a></li>
+<li><a href="#%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E5%AE%9E%E4%BE%8B%E5%A4%A7%E5%B0%8F">虚拟机的实例大小</a></li>
+<li><a href="#%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E5%91%BD%E5%90%8D%E8%A7%84%E5%88%99">虚拟机的命名规则</a>
+<ul>
+<li><a href="#%E4%BA%9A%E9%A9%AC%E9%80%8A%E4%BA%91">亚马逊云</a></li>
+<li><a href="#%E5%BE%AE%E8%BD%AF%E4%BA%91">微软云</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E4%BA%91%E7%A1%AC%E7%9B%98">云硬盘</a>
+<ul>
+<li><a href="#%E6%80%A7%E8%83%BD">性能</a></li>
+<li><a href="#%E5%AE%9E%E6%88%98">实战</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BA%91%E4%B8%8A%E8%99%9A%E6%8B%9F%E7%BD%91%E7%BB%9C">云上虚拟网络</a>
+<ul>
+<li><a href="#%E8%99%9A%E6%8B%9F%E7%A7%81%E6%9C%89%E7%BD%91%E7%BB%9C">虚拟私有网络</a></li>
+<li><a href="#%E5%BC%B9%E6%80%A7ip">弹性IP</a></li>
+<li><a href="#%E5%A6%82%E4%BD%95%E5%9C%A8-vpc-%E4%B8%8A%E5%BC%80%E5%8F%A3%E5%AD%90">如何在 VPC 上“开口子”</a></li>
+<li><a href="#%E5%A4%9A%E7%BD%91%E8%BF%9E%E6%8E%A5%E6%9C%89%E5%93%AA%E4%BA%9B%E6%96%B9%E5%BC%8F">多网连接有哪些方式？</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BA%91%E7%AB%AF%E6%9E%B6%E6%9E%84">云端架构</a>
+<ul>
+<li><a href="#%E6%95%85%E9%9A%9C">故障</a></li>
+<li><a href="#%E5%BC%B9%E6%80%A7%E4%BC%B8%E7%BC%A9">弹性伸缩</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BA%91%E4%B8%8A%E8%BF%90%E7%BB%B4">云上运维</a></li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://xxgf.github.io/post/ma-ke-wen-ti/">
+              <h3 class="post-title">
+                码客问题
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: '346dd1e6861a8d5154be',
+    clientSecret: '11fa9ccf79622cb14f892b083428ae40f9f28f13',
+    repo: 'XXGF.github.io',
+    owner: 'XXGF',
+    admin: ['XXGF'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://xxgf.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

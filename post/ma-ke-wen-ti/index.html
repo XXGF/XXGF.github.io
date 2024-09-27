@@ -1,0 +1,393 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>码客问题 | Gridea</title>
+<link rel="shortcut icon" href="https://xxgf.github.io//favicon.ico?v=1727422712163">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://xxgf.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="码客问题 | Gridea - Atom Feed" href="https://xxgf.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="相比线程，协程优势在哪？
+问题：
+虽然协程比起线程轻量级，但是实际场景，又不是比拼谁开启快？在一个高并发场景，性能的瓶颈总归有上限，那么不管协程还是线程总要走向池化，那么协程优势在哪里？
+回答：
+“在一个高并发场景，总归要走向池化”，这个说..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://xxgf.github.io/">
+  <img class="avatar" src="https://xxgf.github.io//images/avatar.png?v=1727422712163" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+      
+        <a href="/note" class="menu">
+          笔记
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              码客问题
+            </h2>
+            <div class="post-info">
+              <span>
+                2024-03-05
+              </span>
+              <span>
+                20 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h1 id="相比线程协程优势在哪">相比线程，协程优势在哪？</h1>
+<p>问题：<br>
+虽然协程比起线程轻量级，但是实际场景，又不是比拼谁开启快？在一个高并发场景，性能的瓶颈总归有上限，那么不管协程还是线程总要走向池化，那么协程优势在哪里？</p>
+<p>回答：<br>
+“在一个高并发场景，总归要走向池化”，这个说法就不对。本质是量变产生质变。</p>
+<p>我们一个1核心2G内存的pod，你作为一个后台开发者，指望它的QPS到多少好？假设是3k QPS，8核心机器能到2.4w，满意了吧？</p>
+<p>如果你用操作系统提供的thread，每个thread一般来说是开启2M的栈大小，3k个threads，光thread的stack就需要6G内存，不可能每一个请求开一个thread处理请求。</p>
+<p>而golang里，stack大小是动态的，初始是4K大小，2G内存理论上最大可以启动524288个gouroutine，每个请求可以分得174个goroutine。这个时候，我们显然不需要对goroutine做池化了呀。</p>
+<p>当每个请求能平均分得得goroutine超过20个，就已经产生了质变，goroutine已经是廉价到非常够用的东西，你可以让一个goroutine在那里傻傻地同步等待它调用RPC接口返回，而不需要做异步处理。</p>
+<p>同时，在一个操作系统里，活跃的thread的数量一般不能超过1000，超过之后，就会出现整体性能急剧下降。为什么呢？<br>
+要明白这个，我们就要review一下CPU这个串行计算器的架构细节。CPU要执行一个指令，指令本身要从存储里获取，指令操作的数据要从存储里获取，从L1/L2 cache取数据，分别是** 几个时钟周期** 和 <strong>十几个时钟周期</strong>，到RAM里取数据，需要几百个时钟周期。操作系统提供的thread，因为内存区域隔离等逻辑，在切换thread的时候，会导致L1/L2 cache的命中率特别低，相较而言特别大的比例需要去RAM里取，然后就出现了CPU计算器经常在等数据到达。而且，thread切换，是需要在用户态和内核态频繁切换，这个切也会导致cache命中率变低。<br>
+而golang的goroutine是在golang runtime的管理下的，它设计的GMP模型整个设计，设计目标之一就是为了高效利用CPU的L1/L2 cache。进而，goroutine就变得更更廉价了。goroutine再廉价，也是有成本的，也抵不住你故意滥用，因为bug而一直泄露（让它在没事儿干之后一直都不退出）。在很少的场景，才需要做池化。</p>
+<p>golang server并发能力太强了。在里面做池化，绝大多数时候不是为了保护自己，而是为了保护被它调用的后端。</p>
+<h2 id="goroutine-高效利用cpu的l1l2-cache怎么理解呢">goroutine 高效利用CPU的L1/L2 cache，怎么理解呢？</h2>
+<p>CPU是做了指令预取、分支预测、内存页寻址Translation lookaside buffer(TLB)等等技术来提高自动充分利用L1/L2 cache的。这个时候，goroutine使用GMP模型，M代表物理线程，G代表goroutine，P代表对一组G的管理，这个时候，goruntime开启合理的物理线程数(M的数量)，把真正要运行的G合理的分组到P里面，让他们在合理的M里进行执行，这样，就尽量减少了操作系统thread(M)发生切换。</p>
+<p>而且GO的GMP模型对于heap的管理，也去尽量分组跟随M，尽量黏合在一起。就能有效地避免TLB重建【确认的说，这里是避免TLB更新】，让热点goroutine的热点数据更多地停留在一个CPU核心的cache里拉。具体的细节，我贴的讲GMP模型的链接里有讲到一些。更多细节是隐藏在goruntime大量的代码里的。这些代码，就是按照这个指导意见去实现的。</p>
+<h3 id="如何理解上文的避免tlb重建">如何理解上文的：避免TLB重建？</h3>
+<pre><code>Go 语言的运行时采用了 GMP 模型来管理并发，其中：
+
+G 代表 Goroutine，是 Go 语言的轻量级线程。
+M 代表机器（Machine），是操作系统的线程。
+P 代表处理器（Processor），是执行 Goroutine 所需的资源的集合。
+在 Go 的并发模型中，P 会持有一组本地的 Goroutine 队列，M 会从这个队列中获取 Goroutine 来执行。当一个 M 执行一个 Goroutine 时，它会使用一段连续的内存区域（heap）。如果这个 Goroutine 长时间运行在同一个 M 上，它的内存访问模式就会倾向于局部性原理，这意味着它会频繁访问相同的内存区域。
+
+局部性原理有两种形式：
+
+时间局部性（Temporal Locality）：如果一个内存位置被访问，那么它可能在不久的将来再次被访问。
+空间局部性（Spatial Locality）：如果一个内存位置被访问，那么它附近的内存位置也可能很快被访问。
+当一个 Goroutine 长时间在同一个 M 上执行时，它的数据很可能会被缓存在 CPU 的缓存中，这样可以减少对主内存的访问，从而提高性能。同时，由于这个 Goroutine 的页表条目已经被加载到 TLB 中，它可以避免频繁的 TLB 重建。
+
+如果 Goroutine 频繁在不同的 M 之间迁移，那么每次迁移都可能导致运行它的 M 的 CPU 缓存和 TLB 中的数据和条目不再有效，因为不同的 M 可能运行在不同的 CPU 核心上。这就需要重新加载数据到 CPU 缓存和页表条目到 TLB，从而导致性能下降。
+
+因此，Go 语言的运行时尽量让 Goroutine 在同一个 M 上运行，以保持 CPU 缓存和 TLB 的高效利用，减少缓存失效和 TLB 重建的情况，这样可以提高程序的性能。这种设计是对操作系统线程（M）和 CPU 缓存架构的一种优化策略，以减少上下文切换的开销并提高数据处理的效率。
+</code></pre>
+<h2 id="goroutine-相比线程的内存开销">goroutine 相比线程的内存开销</h2>
+<p>编译器会根据代码给你预分配一个差不多够的，最小初始值是2k，要管理一个goroutine需要一些存储，可以认为goroutine消耗4k内存。golang的栈大小可以动态扩展，也可以动态缩小。<br>
+cpp和Java里的thread跟随操作系统的thread，只能在启动之前设置，接受操作系统环境变量为设置，默认是2M。可以认为 goroutine 的内存开销是线程的1/1024</p>
+<h2 id="补充1什么是三级缓存以及三级缓存的读取耗时">补充1：什么是三级缓存，以及三级缓存的读取耗时？</h2>
+<p>在计算机科学中，&quot;三级缓存&quot;通常指的是 CPU 中的缓存层次结构，它包括三个不同级别的缓存，每个级别的缓存速度和大小都不同。这三级缓存分别是：</p>
+<h3 id="l1-缓存一级缓存">L1 缓存（一级缓存）</h3>
+<ul>
+<li>这是最快的缓存，位于 CPU 内核内部，与执行单元非常接近。</li>
+<li>它的大小通常比其他级别的缓存小，范围在几十到几百KB。</li>
+<li>L1 缓存通常分为两部分：L1d（数据缓存）和L1i（指令缓存），分别用于存储数据和指令。</li>
+<li>L1 缓存的设计旨在提供极低的延迟，以匹配内核的高速执行能力。</li>
+</ul>
+<h3 id="l2-缓存二级缓存">L2 缓存（二级缓存）</h3>
+<ul>
+<li>L2 缓存的速度比 L1 缓存慢，但通常比 L1 缓存大，可以达到几百KB到几MB。</li>
+<li>每个内核也有自己的 L2 缓存，它比 L1 缓存大，但访问速度稍慢。</li>
+<li>L2 缓存通常用于存储最近访问的数据和指令，以减少对 L1 缓存的回填需求。</li>
+<li>【PS: 在一些处理器架构中，L2 缓存是每个 CPU 内核专有的，而在其他架构中，它可能是由多个内核共享的】</li>
+</ul>
+<h3 id="l3-缓存三级缓存">L3 缓存（三级缓存）</h3>
+<ul>
+<li>L3 缓存比 L1 和 L2 缓存慢，但它的容量更大，通常在几MB到几十MB之间。</li>
+<li>每个CPU 的所有内核共享L3 缓存。</li>
+<li>L3 缓存的目的是减少对更慢的主内存的访问。由于它是共享的，它还可以用于减少内核之间同步数据时的延迟。</li>
+</ul>
+<p>举个例子：<br>
+当一个内核需要读取数据时，它会按照以下顺序查找：</p>
+<ul>
+<li>首先检查 L1 缓存，如果找到了所需的数据，就会立即使用，这称为 &quot;缓存命中&quot;。</li>
+<li>如果 L1 缓存中没有找到数据，它会检查 L2 缓存。如果在 L2 缓存中找到了数据，这也是一个 &quot;缓存命中&quot;，但访问速度会比 L1 缓存慢一些。</li>
+<li>如果 L2 缓存中也没有找到数据，CPU 会检查 L3 缓存。在 L3 缓存中找到数据的速度会比 L1 和 L2 缓存慢，但仍然比从主内存中检索要快得多。</li>
+<li>最后，如果在 L3 缓存中也没有找到数据，CPU 将不得不从主内存中读取数据，这是最慢的操作，称为 &quot;缓存未命中&quot;。</li>
+</ul>
+<h3 id="各级缓存的访问需要多长时间">各级缓存的访问需要多长时间？</h3>
+<p>CPU 缓存的访问时间并不是固定的，它会根据具体的处理器设计、制造工艺、缓存的大小、缓存的组织方式以及其他一些因素而有所不同。然而，我可以给出一些大致的范围，以便你了解不同级别的缓存之间的相对速度。</p>
+<p>L1 缓存：<br>
+访问时间通常在 0.5 到 1 纳秒（ns）之间。这是最快的缓存，几乎与 CPU 的速度同步。</p>
+<p>L2 缓存：<br>
+访问时间可能在 2 到 4 纳秒之间。L2 缓存比 L1 缓存慢，但通常比 L3 缓存快。</p>
+<p>L3 缓存：<br>
+访问时间可能在 10 到 30 纳秒之间。L3 缓存是最慢的一级 CPU 缓存，但它仍然比主内存快得多。</p>
+<p>相比之下，主内存（RAM）的访问时间可能在 50 到 100 纳秒左右，这比任何级别的 CPU 缓存都要慢。这就是为什么缓存对于提高计算机性能至关重要的原因：它们能够极大地减少处理器等待数据的时间。</p>
+<p>需要注意的是，上述数字仅仅是一个粗略的估计，实际的访问时间会根据具体的 CPU 模型和技术规格而变化。此外，随着 CPU 技术的发展，这些数字也在不断变化。</p>
+<h3 id="各级缓存的访问需要多少个时钟周期">各级缓存的访问需要多少个时钟周期？</h3>
+<p>CPU 中的缓存层次结构包括 L1、L2 和 L3 缓存，每一级缓存的访问时间都不同，需要的时钟周期也不同。这些时钟周期的数量会根据具体的处理器设计和技术而有所变化。以下是一个大致的指导，但请记住，实际的时钟周期可能会有所不同：</p>
+<p>L1 缓存：<br>
+通常是最快的缓存层次，访问时间大约需要 3-4 个时钟周期，有些处理器可能更快，只需要 1-2 个时钟周期。</p>
+<p>L2 缓存：<br>
+通常比 L1 缓存慢一些，访问时间可能需要大约 10-12 个时钟周期。在一些处理器中，L2 缓存是与 CPU 核心集成在一起的，这可能会减少访问时间。</p>
+<p>L3 缓存：<br>
+通常是共享缓存，服务于多个核心。它的访问时间比 L1 和 L2 缓存都要慢，可能需要几十个时钟周期，例如 30-40 个时钟周期或者更多。</p>
+<p>主内存（通常指的是 DRAM）的访问时间相比于 CPU 缓存要慢得多。主内存的访问延迟通常几百个时钟周期来计算，具体取决于内存的类型、速度以及CPU与内存之间的接口。</p>
+<pre><code>举个例子：
+如果一个CPU的时钟频率是3 GHz，那么每个时钟周期大约是0.333纳秒。
+主内存的访问时间可能在几十纳秒到上百纳秒之间，这意味着可能需要大约100到300个时钟周期才能完成一次内存访问。
+这个数字是非常粗略的估计，实际的时钟周期数可能会因为具体的系统设计和内存技术而有所不同。
+</code></pre>
+<h2 id="补充2什么是时钟周期">补充2：什么是时钟周期？</h2>
+<p>时钟周期是 CPU 执行指令的<strong>基本时间单位</strong>，它是由 CPU 的时钟频率决定的。CPU 的时钟频率，通常以赫兹（Hz）为单位，指的是其内部时钟振荡器每秒产生的周期性电信号的次数。这个频率决定了 CPU 执行操作的速度。</p>
+<p>一个时钟周期是 CPU 时钟频率的倒数。例如，如果一个 CPU 的时钟频率是 3 GHz（即 3,000,000,000 赫兹），那么它的时钟周期就是 1/3,000,000,000 秒，大约是 0.333 纳秒。</p>
+<p>在每个时钟周期中，CPU 可以执行一个或多个基本操作，这些操作包括读取指令、执行算术或逻辑运算、访问内存等。不同的 CPU 指令可能需要不同数量的时钟周期来完成。一些简单的指令可能只需要一个时钟周期，而更复杂的指令可能需要多个时钟周期。</p>
+<p><strong>时钟周期是衡量 CPU 性能的关键因素之一</strong>，但并不是唯一的因素。现代 CPU 通过流水线、超标量架构、多线程等技术，可以在每个时钟周期内开始执行多条指令，从而提高了每个周期的工作效率。因此，即使两个 CPU 的时钟频率相同，它们的实际性能也可能因为架构差异而有所不同。</p>
+<h2 id="补充3什么是tlb">补充3：什么是TLB？</h2>
+<p>Translation Lookaside Buffer（TLB）是一种特殊的缓存，用于加速虚拟地址到物理地址的转换过程。在现代计算机系统中，操作系统使用虚拟内存来管理程序的内存访问，这意味着程序使用的地址并不是物理内存中的实际地址，而是虚拟地址。这些虚拟地址需要转换成物理地址才能访问实际的内存硬件。</p>
+<p>这个转换过程通常涉及到一个叫做页表（page table）的数据结构。页表存储了虚拟地址到物理地址的映射关系。由于页表可能非常大，直接在内存中查找会非常慢，因此引入了 TLB 来提高这一过程的效率。</p>
+<p>TLB 的工作原理如下：</p>
+<ol>
+<li>
+<p>快速查找：当 CPU 需要访问内存时，它首先会在 TLB 中查找虚拟地址对应的页表项。由于 TLB 是一种高速缓存，它通常位于 CPU 核心附近，因此访问速度非常快。</p>
+</li>
+<li>
+<p>命中与未命中：如果 TLB 中找到了对应的页表项（这称为“TLB 命中”），CPU 就可以直接使用该信息来访问物理内存，这大大减少了访问时间。如果没有找到（称为“TLB 未命中”），CPU 必须从主内存中的页表中检索这个信息。</p>
+</li>
+<li>
+<p>更新 TLB：在 TLB 未命中的情况下，CPU 会从页表中读取所需的映射，并将其加载到 TLB 中，以便下次可以更快地访问。</p>
+</li>
+<li>
+<p>上下文切换【TLB重建】：当操作系统切换到另一个进程时，TLB 通常需要被更新以反映新进程的页表映射，因为不同的进程有不同的虚拟地址空间。</p>
+</li>
+</ol>
+<p>TLB 可以极大地提高内存访问的速度，因为它避免了频繁地在主内存中查找页表项。然而，TLB 的大小是有限的，它不能存储所有可能的页表项。因此，TLB 的设计，包括其大小、替换策略和关联度，对于系统性能有重要影响。<br>
+TLB 也有不同的级别，比如一些系统可能有 L1 和 L2 TLB，其中 L1 TLB 速度更快但容量较小，而 L2 TLB 容量更大但速度较慢。这与 CPU 缓存的层次结构类似。</p>
+<h2 id="tlb重建的情况">TLB重建的情况？</h2>
+<ul>
+<li>上下文切换</li>
+<li>页表更新</li>
+<li>进程地址空间变更：当一个进程的虚拟地址空间发生变化时（如动态内存分配或释放），相关的 TLB 条目需要更新以确保地址转换的正确性。<br>
+-TLB 缓存失效：如硬件支持的内存管理单元（MMU）发出的特定信号或指令，可能会导致 TLB 条目被标记为无效或被清除。</li>
+<li>处理器电源状态变化：从低功耗状态唤醒时，TLB 可能需要被重新填充，因为低功耗状态可能会导致 TLB 内容被丢弃。</li>
+<li>大页支持：当操作系统开始使用或停止使用大页（large pages）时，TLB 需要更新以支持更大的内存页大小。</li>
+</ul>
+<p>同一进程内的线程切换不会导致TLB重建，不同进程间的线程切换可能会导致TLB重建。<br>
+在多核或多线程的处理器中，每个核或线程可能有自己的本地 TLB，这样即使发生了进程切换，其他核或线程的 TLB 也不会受到影响。<br>
+总的来说，线程切换是否导致 TLB 重建取决于线程是否共享相同的地址空间以及处理器和操作系统如何管理 TLB 条目。</p>
+<h1 id="go的gmp模型">GO的GMP模型</h1>
+<p>Go 语言的运行时采用了 GMP 模型来管理并发，其中：</p>
+<ul>
+<li>G 代表 Goroutine，是 Go 语言的轻量级线程。</li>
+<li>M 代表机器（Machine），是操作系统的线程。</li>
+<li>P 代表处理器（Processor），是执行 Goroutine 所需的资源的集合。</li>
+</ul>
+<p>在 Go 的并发模型中，P 会持有一组本地的 Goroutine 队列，M 会从这个队列中获取 Goroutine 来执行。当一个 M 执行一个 Goroutine 时，它会使用一段连续的内存区域（heap）。如果这个 Goroutine 长时间运行在同一个 M 上，它的内存访问模式就会倾向于局部性原理，这意味着它会频繁访问相同的内存区域。</p>
+<p>局部性原理有两种形式：</p>
+<ul>
+<li>时间局部性（Temporal Locality）：如果一个内存位置被访问，那么它可能在不久的将来再次被访问。</li>
+<li>空间局部性（Spatial Locality）：如果一个内存位置被访问，那么它附近的内存位置也可能很快被访问。</li>
+</ul>
+<p>当一个 Goroutine 长时间在同一个 M 上执行时，它的数据很可能会被缓存在 CPU 的缓存中，这样可以减少对主内存的访问，从而提高性能。同时，由于这个 Goroutine 的页表条目已经被加载到 TLB 中，它可以避免频繁的 TLB 重建。</p>
+<p>如果 Goroutine 频繁在不同的 M 之间迁移，那么每次迁移都可能导致运行它的 M 的 CPU 缓存和 TLB 中的数据和条目不再有效，因为不同的 M 可能运行在不同的 CPU 核心上。这就需要重新加载数据到 CPU 缓存和页表条目到 TLB，从而导致性能下降。</p>
+<p>因此，Go 语言的运行时尽量让 Goroutine 在同一个 M 上运行，以保持 CPU 缓存和 TLB 的高效利用，减少缓存失效和 TLB 重建的情况，这样可以提高程序的性能。这种设计是对操作系统线程（M）和 CPU 缓存架构的一种优化策略，以减少上下文切换的开销并提高数据处理的效率。</p>
+<h1 id="java程序中的线程默认大小">Java程序中的线程默认大小</h1>
+<p>在 Java 程序中，每个线程的栈大小可以通过 JVM 启动参数 -Xss 来设置。如果没有明确指定，那么默认的线程栈大小会依赖于 JVM 的版本和宿主操作系统。</p>
+<p>对于 HotSpot JVM，不同的操作系统和架构可能有不同的默认值。例如，在 64 位的 Windows 上，默认值可能是 1MB，而在 64 位的 Linux 上，默认值可能是 256KB。这些值也可能随着 JVM 版本的不同而有所变化。</p>
+<h2 id="能将java程序中的线程的栈大小设置为-2k-吗会有什么问题">能将Java程序中的线程的栈大小设置为 2K 吗？会有什么问题？</h2>
+<p>在 Java 中，尝试将线程栈大小设置为非常小的值（如 2KB）通常是不可行的，因为这个大小可能小于 JVM 允许的最小栈大小。线程栈太小会导致无法为线程正常分配足够的栈空间，从而引发 StackOverflowError 或者在线程尝试启动时就失败。</p>
+<p>JVM 的 -Xss 参数用于设置线程的栈大小，但是有最小限制，这个限制取决于操作系统和 JVM 的实现。通常，这个最小值至少是几十 KB。例如，在某些版本的 HotSpot JVM 中，最小线程栈大小可能是 128KB 或者更大。如果你尝试设置一个小于这个最小值的栈大小，JVM 将会忽略这个设置或者报错，并使用默认的最小栈大小。</p>
+<h1 id="实践">实践</h1>
+<p>1、 如何测试CPU三级缓存的访问时延？</p>
+<p>2、如何测试Go程序的并发性能？对比池化和不池化？</p>
+<h1 id="拓展">拓展</h1>
+<p>如何查看CPU的时钟频率？<br>
+cat /proc/cpuinfo | grep MHz<br>
+<img src="https://xxgf.github.io//post-images/1709610498259.png" alt="" loading="lazy"></p>
+<p>如何查看CPU的三级缓存？<br>
+lscpu<br>
+<img src="https://xxgf.github.io//post-images/1709610504573.png" alt="" loading="lazy"></p>
+<p>码客问题：https://mk.woa.com/q/293204?utm_ref=km_qselected</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#%E7%9B%B8%E6%AF%94%E7%BA%BF%E7%A8%8B%E5%8D%8F%E7%A8%8B%E4%BC%98%E5%8A%BF%E5%9C%A8%E5%93%AA">相比线程，协程优势在哪？</a>
+<ul>
+<li><a href="#goroutine-%E9%AB%98%E6%95%88%E5%88%A9%E7%94%A8cpu%E7%9A%84l1l2-cache%E6%80%8E%E4%B9%88%E7%90%86%E8%A7%A3%E5%91%A2">goroutine 高效利用CPU的L1/L2 cache，怎么理解呢？</a>
+<ul>
+<li><a href="#%E5%A6%82%E4%BD%95%E7%90%86%E8%A7%A3%E4%B8%8A%E6%96%87%E7%9A%84%E9%81%BF%E5%85%8Dtlb%E9%87%8D%E5%BB%BA">如何理解上文的：避免TLB重建？</a></li>
+</ul>
+</li>
+<li><a href="#goroutine-%E7%9B%B8%E6%AF%94%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%86%85%E5%AD%98%E5%BC%80%E9%94%80">goroutine 相比线程的内存开销</a></li>
+<li><a href="#%E8%A1%A5%E5%85%851%E4%BB%80%E4%B9%88%E6%98%AF%E4%B8%89%E7%BA%A7%E7%BC%93%E5%AD%98%E4%BB%A5%E5%8F%8A%E4%B8%89%E7%BA%A7%E7%BC%93%E5%AD%98%E7%9A%84%E8%AF%BB%E5%8F%96%E8%80%97%E6%97%B6">补充1：什么是三级缓存，以及三级缓存的读取耗时？</a>
+<ul>
+<li><a href="#l1-%E7%BC%93%E5%AD%98%E4%B8%80%E7%BA%A7%E7%BC%93%E5%AD%98">L1 缓存（一级缓存）</a></li>
+<li><a href="#l2-%E7%BC%93%E5%AD%98%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98">L2 缓存（二级缓存）</a></li>
+<li><a href="#l3-%E7%BC%93%E5%AD%98%E4%B8%89%E7%BA%A7%E7%BC%93%E5%AD%98">L3 缓存（三级缓存）</a></li>
+<li><a href="#%E5%90%84%E7%BA%A7%E7%BC%93%E5%AD%98%E7%9A%84%E8%AE%BF%E9%97%AE%E9%9C%80%E8%A6%81%E5%A4%9A%E9%95%BF%E6%97%B6%E9%97%B4">各级缓存的访问需要多长时间？</a></li>
+<li><a href="#%E5%90%84%E7%BA%A7%E7%BC%93%E5%AD%98%E7%9A%84%E8%AE%BF%E9%97%AE%E9%9C%80%E8%A6%81%E5%A4%9A%E5%B0%91%E4%B8%AA%E6%97%B6%E9%92%9F%E5%91%A8%E6%9C%9F">各级缓存的访问需要多少个时钟周期？</a></li>
+</ul>
+</li>
+<li><a href="#%E8%A1%A5%E5%85%852%E4%BB%80%E4%B9%88%E6%98%AF%E6%97%B6%E9%92%9F%E5%91%A8%E6%9C%9F">补充2：什么是时钟周期？</a></li>
+<li><a href="#%E8%A1%A5%E5%85%853%E4%BB%80%E4%B9%88%E6%98%AFtlb">补充3：什么是TLB？</a></li>
+<li><a href="#tlb%E9%87%8D%E5%BB%BA%E7%9A%84%E6%83%85%E5%86%B5">TLB重建的情况？</a></li>
+</ul>
+</li>
+<li><a href="#go%E7%9A%84gmp%E6%A8%A1%E5%9E%8B">GO的GMP模型</a></li>
+<li><a href="#java%E7%A8%8B%E5%BA%8F%E4%B8%AD%E7%9A%84%E7%BA%BF%E7%A8%8B%E9%BB%98%E8%AE%A4%E5%A4%A7%E5%B0%8F">Java程序中的线程默认大小</a>
+<ul>
+<li><a href="#%E8%83%BD%E5%B0%86java%E7%A8%8B%E5%BA%8F%E4%B8%AD%E7%9A%84%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%A0%88%E5%A4%A7%E5%B0%8F%E8%AE%BE%E7%BD%AE%E4%B8%BA-2k-%E5%90%97%E4%BC%9A%E6%9C%89%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98">能将Java程序中的线程的栈大小设置为 2K 吗？会有什么问题？</a></li>
+</ul>
+</li>
+<li><a href="#%E5%AE%9E%E8%B7%B5">实践</a></li>
+<li><a href="#%E6%8B%93%E5%B1%95">拓展</a></li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://xxgf.github.io/post/xu-shi-wei-de-jia-gou-ke-si-wang-luo/">
+              <h3 class="post-title">
+                许式伟的架构课（四）：网络 - 宏观概念
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: '346dd1e6861a8d5154be',
+    clientSecret: '11fa9ccf79622cb14f892b083428ae40f9f28f13',
+    repo: 'XXGF.github.io',
+    owner: 'XXGF',
+    admin: ['XXGF'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://xxgf.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

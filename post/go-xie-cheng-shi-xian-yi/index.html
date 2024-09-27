@@ -1,0 +1,353 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Go协程实现（一） | Gridea</title>
+<link rel="shortcut icon" href="https://xxgf.github.io//favicon.ico?v=1727422712163">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://xxgf.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="Go协程实现（一） | Gridea - Atom Feed" href="https://xxgf.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="协程实现关键部分
+一个完整的协程实现通常需要包含以下几个关键部分：
+协程状态管理：
+创建：能够创建协程实例，并初始化其运行环境。
+暂停（挂起）：在执行过程中，协程可以在某个点暂停执行，保存当前的执行状态。
+恢复（继续）：能够从上次暂停的地方..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://xxgf.github.io/">
+  <img class="avatar" src="https://xxgf.github.io//images/avatar.png?v=1727422712163" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+      
+        <a href="/note" class="menu">
+          笔记
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              Go协程实现（一）
+            </h2>
+            <div class="post-info">
+              <span>
+                2024-03-01
+              </span>
+              <span>
+                13 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h1 id="协程实现关键部分">协程实现关键部分</h1>
+<p>一个完整的协程实现通常需要包含以下几个关键部分：</p>
+<h2 id="协程状态管理">协程状态管理：</h2>
+<p>创建：能够创建协程实例，并初始化其运行环境。<br>
+暂停（挂起）：在执行过程中，协程可以在某个点暂停执行，保存当前的执行状态。<br>
+恢复（继续）：能够从上次暂停的地方恢复执行。<br>
+结束：当协程完成其任务后，它应该能够正确地结束，并清理占用的资源。</p>
+<h2 id="调度机制">调度机制：</h2>
+<p>协程调度器：负责管理协程的执行顺序，决定何时以及如何切换协程。<br>
+上下文切换：在不同协程之间切换时，需要保存和恢复执行上下文（如CPU寄存器状态、堆栈信息等）。</p>
+<h2 id="任务协作和通信">任务协作和通信：</h2>
+<p>同步机制：提供协程间同步的手段，如等待/通知机制，以确保以线程安全的方式共享资源。<br>
+通信机制：允许协程之间传递消息，例如通过队列、管道、事件或其他通信原语。</p>
+<h2 id="错误处理">错误处理：</h2>
+<p>异常捕获和处理：协程在执行过程中可能会遇到异常，需要有机制来捕获和处理这些异常。</p>
+<h2 id="资源管理">资源管理：</h2>
+<p>内存管理：协程在运行时可能会分配内存，需要在协程结束时释放这些资源。<br>
+生命周期管理：确保协程在其生命周期结束时能够正确地释放所有资源。</p>
+<h2 id="接口和抽象">接口和抽象：</h2>
+<p>易用的API：提供一组简单的接口，让开发者能够轻松地创建和管理协程。<br>
+抽象层：在不同的运行环境或语言特性上提供统一的协程抽象。</p>
+<h2 id="可选的高级特性">可选的高级特性：</h2>
+<p>取消和超时：允许取消正在执行的协程或设置超时。<br>
+调试支持：提供工具或机制来调试协程的状态和行为。<br>
+性能监控：监控协程的性能指标，如启动时间、执行时间、内存使用等。<br>
+不同的编程语言和框架可能会提供不同层次的协程支持。例如，Python 通过 asyncio 库提供了协程的支持，包括事件循环、协程函数、任务等。而在Go语言中，协程（称为goroutines）是语言层面支持的，通过关键字 go 来启动，并且运行时(runtime)负责调度。每种实现都有其特定的方式来处理上述的关键部分。</p>
+<h1 id="go语言的协程实现概述">GO语言的协程实现概述</h1>
+<p>Go 语言的协程，称为 goroutine，是 Go 语言并发设计的核心。Go 的运行时（runtime）系统对 goroutine 进行了高度的抽象和封装，使得使用和管理 goroutine 变得非常简单。Go 的 goroutine 实现确实包含了上述提到的关键部分，但是它们是以 Go 语言特有的方式实现的。</p>
+<p>下面是 Go 语言中实现协程的一些关键部分的简要分析：</p>
+<h2 id="协程状态管理-2">协程状态管理：</h2>
+<p>Go 语言的 runtime 包负责 goroutine 的创建和状态管理。当你使用 go 关键字启动一个新的函数时，Go 语言的 runtime 会为这个函数创建一个新的 goroutine。</p>
+<h2 id="调度机制-2">调度机制：</h2>
+<p>Go 使用了一个叫做 M:N 调度器的模型（多个 goroutine 映射到多个 OS 线程）。Go 的 runtime 包含了自己的调度器，它负责在可用的线程（M）上调度 goroutine（N）。</p>
+<p>上下文切换在 Go 中是由 runtime 调度器管理的，它比操作系统线程的上下文切换要轻量得多。</p>
+<h2 id="任务协作和通信-2">任务协作和通信：</h2>
+<p>Go 语言通过 channels 提供了协程间的通信机制。Channels 支持同步和异步通信，可以用来在 goroutine 之间传递数据。<br>
+同步机制还包括 WaitGroup、Mutex、Cond 等，这些都在 sync 包中定义。</p>
+<h2 id="错误处理-2">错误处理：</h2>
+<p>Go 语言中的错误处理是通过返回错误值和使用 panic/recover 机制来实现的。这些机制也适用于在 goroutine 中进行错误处理。</p>
+<h2 id="资源管理-2">资源管理：</h2>
+<p>Go 的垃圾回收器会自动管理内存，包括 goroutine 使用的内存。当一个 goroutine 结束时，它占用的内存会被垃圾回收器回收。</p>
+<h2 id="接口和抽象-2">接口和抽象：</h2>
+<p>Go 语言的设计哲学是提供简洁的抽象。go 关键字就是创建 goroutine 的全部 API，非常简单易用。</p>
+<h2 id="可选的高级特性-2">可选的高级特性：</h2>
+<p>Go 语言的 context 包可以用来取消正在执行的 goroutine 或设置超时。<br>
+Go 语言的 runtime 和标准库提供了一些工具来监控和调试 goroutine，比如 runtime 包中的 Gosched、NumGoroutine 等函数，以及 pprof 工具。</p>
+<h1 id="go语言的协程实现源码分析">GO语言的协程实现源码分析</h1>
+<p>由于 Go 的 runtime 是用 C 和汇编语言编写的，直接分析源码需要对这些语言以及 Go 的内部机制有深入的理解。不过，我们可以简单看一下 go 关键字是如何启动一个 goroutine 的。以下是一个高度简化的版本，展示了这个过程：</p>
+<pre><code>// go func() 是启动新 goroutine 的语法
+go func() {
+    fmt.Println(&quot;Hello from a goroutine!&quot;)
+}()
+</code></pre>
+<p>在 Go 的 runtime 源码中，这个 go 语句最终会调用到 runtime.newproc 函数，该函数负责分配一个新的 goroutine 并将其放入调度器的队列中。这个过程涉及到栈的分配、goroutine 的初始化等一系列复杂的步骤，但对于 Go 语言的使用者来说，这些都是透明的。</p>
+<p>在 Go 的 runtime 实现中，newproc 函数会设置 goroutine 的初始栈，初始化其上下文，并将其状态设置为可运行的。然后，这个新的 goroutine 就会被放入到本地运行队列中，等待调度器的调度。</p>
+<p>这里是一个简化的例子，展示了 newproc 函数的调用过程（注意，这不是实际的 runtime 代码，而是为了解释概念而编写的伪代码）：</p>
+<pre><code>// newproc 伪代码
+void newproc(size_t stacksize, void (*fn)(void)) {
+    // 分配内存给 goroutine 的栈
+    Stack *stack = allocstack(stacksize);
+    
+    // 初始化 goroutine 的上下文，设置入口点为 fn
+    G *g = malg(stacksize);
+    g-&gt;status = GRunnable;
+    g-&gt;entry = fn;
+    g-&gt;stack = stack;
+    
+    // 将 goroutine 放入到调度器队列
+    globrunqput(g);
+}
+</code></pre>
+<p>在 Go 的实际 runtime 实现中，newproc 会做更多的工作，包括与垃圾回收器的交互、更复杂的栈管理等。一旦 newproc 将 goroutine 设置为可运行状态并放入队列，Go 的调度器就会在某个时刻选择这个 goroutine 运行。</p>
+<p>Go 调度器使用了一种称为 work-stealing 的算法来平衡不同线程上的工作负载。每个线程（在 Go 中称为 M，machine）都有自己的本地运行队列，如果本地队列中没有 goroutine 可以运行，它会尝试从其他线程的队列中“偷取”一半的 goroutine 来运行。</p>
+<p>Go 的 runtime 还包括了网络轮询器（netpoller），它是一个高效的 I/O 多路复用机制。当 goroutine 进行网络 I/O 操作时，如果数据还没有准备好，goroutine 会被挂起，而不是阻塞一个线程。当数据准备好了，网络轮询器会唤醒相应的 goroutine，让它继续执行。</p>
+<p>总的来说，Go 的 goroutine 是一种轻量级的协程实现，它通过语言层面的支持和 runtime 的高效调度，提供了一种简单而强大的并发编程模型。由于 Go 的 runtime 源码相当复杂，如果你对细节感兴趣，我建议直接查看 Go 语言的源码库，特别是 runtime 包的相关部分。</p>
+<p>要深入理解 Go 的 goroutine 是如何实现的，你需要阅读和分析 Go 语言的 runtime 源码。这里是一些关键的 runtime 函数和概念，它们在 goroutine 的生命周期管理、调度和执行中起着核心作用：</p>
+<p>runtime.newproc：</p>
+<p>这个函数是在 Go 代码中使用 go 关键字时最终会调用的函数。它负责初始化一个新的 goroutine，并将其放入到调度器的队列中。<br>
+G、M、P 的概念：</p>
+<p>G (Goroutine)：代表一个 goroutine 的状态和上下文信息。<br>
+M (Machine)：代表一个内核线程，可以理解为执行 goroutine 的工作线程。<br>
+P (Processor)：代表逻辑处理器，它的数量决定了可以同时运行多少个 goroutine。每个 P 都有一个本地的 runqueue，用于存放准备运行的 goroutine。<br>
+runtime.schedule：</p>
+<p>调度器的核心函数，负责选择下一个要运行的 goroutine，并进行上下文切换。<br>
+runtime.gopark 和 runtime.goready：</p>
+<p>gopark 用于将 goroutine 挂起，通常是因为它在等待某些事件（如 channel 操作或锁等待）。<br>
+goready 用于将一个挂起的 goroutine 标记为可运行状态，这通常发生在它等待的事件已经发生时。</p>
+<p>runtime.gosched:</p>
+<p>这个函数用于让出当前 goroutine 执行的权限，调度器会选择另一个 goroutine 继续执行。这是一种主动让出 CPU 时间片的方式，以便其他 goroutine 可以运行。<br>
+runtime.mallocgc:</p>
+<p>分配内存时会调用这个函数，它负责在堆上分配内存，并考虑是否需要触发垃圾回收。<br>
+runtime.semacquire 和 runtime.semrelease:</p>
+<p>这些函数用于同步原语（如互斥锁和信号量）的实现，它们管理着 goroutine 的睡眠和唤醒，以便在资源可用时继续执行。<br>
+runtime.netpoll:</p>
+<p>这是网络轮询器的实现，它负责非阻塞的网络 I/O。当 goroutine 等待 I/O 时，它会被挂起，直到 I/O 事件就绪，然后被唤醒继续执行。<br>
+栈管理:</p>
+<p>Go 的 runtime 还包括了栈的动态增长和收缩机制。当一个 goroutine 的栈空间不足时，runtime 会自动分配一个更大的栈并复制现有的栈数据到新栈上。这个过程对于 goroutine 来说是透明的。<br>
+runtime.morestack 和 runtime.lessstack:</p>
+<p>这些函数用于处理栈的动态扩展和收缩。当 goroutine 的栈空间不足时，morestack 被调用来分配更多的栈空间。相反，lessstack 用于在栈空间过大时减少分配的栈空间。<br>
+垃圾回收:</p>
+<p>Go 的垃圾回收器负责回收不再使用的内存。它是并发执行的，并且会与 goroutine 的创建和销毁紧密协作。<br>
+runtime.findrunnable:</p>
+<p>这个函数用于在本地 runqueue 或全局 runqueue 中查找一个可运行的 goroutine。如果本地 runqueue 为空，它可能会尝试从其他 P 的 runqueue 中偷取 goroutine，或者从全局 runqueue 中获取。<br>
+runtime.goroutine:</p>
+<p>这是一个结构体，它表示一个 goroutine。它包含了 goroutine 的执行栈、调度信息、状态等。<br>
+要注意的是，Go 的 runtime 是高度优化和复杂的，上述函数和概念只是冰山一角。如果你想要深入了解，最好的方式是直接查看 Go 的源码。Go 的源码托管在 GitHub 上，你可以在 Go GitHub repository 中找到 runtime 包的代码。</p>
+<p>理解这些底层细节需要对操作系统的调度、内存管理、并发控制等方面有一定的了解。如果你是一个对这些概念不太熟悉的 Go 开发者，那么你可能需要先补充一些计算机科学的基础知识，特别是操作系统和计算机程序的构造。</p>
+<p>在深入研究 Go runtime 源码之前，这里有一些建议的学习步骤：</p>
+<p>操作系统原理：</p>
+<p>学习操作系统的基本概念，如进程、线程、上下文切换、调度算法、同步机制、死锁、内存管理等。<br>
+并发编程：</p>
+<p>理解并发和并行的区别，学习线程安全、锁、原子操作、条件变量、信号量等同步原语的使用和原理。<br>
+计算机网络：</p>
+<p>如果你对 runtime.netpoll 等网络相关的 runtime 功能感兴趣，那么对计算机网络的基础知识，如 TCP/IP 协议栈、非阻塞 I/O 和多路复用等概念的了解是必要的。<br>
+内存管理：</p>
+<p>学习内存分配、垃圾回收算法、栈和堆的区别等内存管理的基本知识。<br>
+数据结构：</p>
+<p>理解队列、栈、列表、哈希表等基本数据结构，因为这些在 runtime 的实现中被广泛使用。<br>
+Go 语言本身：</p>
+<p>深入理解 Go 语言的特性，如 goroutine、channel、切片、接口等，因为这些特性与 runtime 的实现紧密相关。<br>
+阅读源码：</p>
+<p>开始阅读 Go runtime 的源码，可以从一些简单的部分开始，比如内存分配器的实现（mallocgc），然后逐渐深入到调度器（schedule）、栈管理（morestack）等复杂的部分。<br>
+实践和实验：</p>
+<p>编写一些小程序来实验 goroutine 的调度和行为，使用工具如 pprof 来分析程序的性能和 goroutine 的状态。<br>
+社区资源：</p>
+<p>利用社区资源，如博客文章、论坛讨论和技术会议的演讲，这些都是学习和理解 Go runtime 的好资源。<br>
+通过这些步骤，你可以逐步建立起对 Go runtime 内部工作原理的深入理解。这不仅能帮助你写出更高效的 Go 代码，还能让你在遇到性能问题时更加得心应手。记住，这是一个长期的学习过程，需要耐心和持续的努力。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#%E5%8D%8F%E7%A8%8B%E5%AE%9E%E7%8E%B0%E5%85%B3%E9%94%AE%E9%83%A8%E5%88%86">协程实现关键部分</a>
+<ul>
+<li><a href="#%E5%8D%8F%E7%A8%8B%E7%8A%B6%E6%80%81%E7%AE%A1%E7%90%86">协程状态管理：</a></li>
+<li><a href="#%E8%B0%83%E5%BA%A6%E6%9C%BA%E5%88%B6">调度机制：</a></li>
+<li><a href="#%E4%BB%BB%E5%8A%A1%E5%8D%8F%E4%BD%9C%E5%92%8C%E9%80%9A%E4%BF%A1">任务协作和通信：</a></li>
+<li><a href="#%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86">错误处理：</a></li>
+<li><a href="#%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86">资源管理：</a></li>
+<li><a href="#%E6%8E%A5%E5%8F%A3%E5%92%8C%E6%8A%BD%E8%B1%A1">接口和抽象：</a></li>
+<li><a href="#%E5%8F%AF%E9%80%89%E7%9A%84%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7">可选的高级特性：</a></li>
+</ul>
+</li>
+<li><a href="#go%E8%AF%AD%E8%A8%80%E7%9A%84%E5%8D%8F%E7%A8%8B%E5%AE%9E%E7%8E%B0%E6%A6%82%E8%BF%B0">GO语言的协程实现概述</a>
+<ul>
+<li><a href="#%E5%8D%8F%E7%A8%8B%E7%8A%B6%E6%80%81%E7%AE%A1%E7%90%86-2">协程状态管理：</a></li>
+<li><a href="#%E8%B0%83%E5%BA%A6%E6%9C%BA%E5%88%B6-2">调度机制：</a></li>
+<li><a href="#%E4%BB%BB%E5%8A%A1%E5%8D%8F%E4%BD%9C%E5%92%8C%E9%80%9A%E4%BF%A1-2">任务协作和通信：</a></li>
+<li><a href="#%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86-2">错误处理：</a></li>
+<li><a href="#%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86-2">资源管理：</a></li>
+<li><a href="#%E6%8E%A5%E5%8F%A3%E5%92%8C%E6%8A%BD%E8%B1%A1-2">接口和抽象：</a></li>
+<li><a href="#%E5%8F%AF%E9%80%89%E7%9A%84%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7-2">可选的高级特性：</a></li>
+</ul>
+</li>
+<li><a href="#go%E8%AF%AD%E8%A8%80%E7%9A%84%E5%8D%8F%E7%A8%8B%E5%AE%9E%E7%8E%B0%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90">GO语言的协程实现源码分析</a></li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://xxgf.github.io/post/xu-shi-wei-de-jia-gou-ke-san-jin-cheng/">
+              <h3 class="post-title">
+                许式伟的架构课（三）：进程
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: '346dd1e6861a8d5154be',
+    clientSecret: '11fa9ccf79622cb14f892b083428ae40f9f28f13',
+    repo: 'XXGF.github.io',
+    owner: 'XXGF',
+    admin: ['XXGF'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://xxgf.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
